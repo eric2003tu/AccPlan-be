@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -7,11 +8,13 @@ import { DeleteCategoryDto } from './dto/delete-category.dto';
 import { CategoryDto } from './dto/category.dto';
 
 @ApiTags('Categories')
+@ApiBearerAuth('access-token')
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Create a new category' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class CategoriesController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all categories' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class CategoriesController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a category' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class CategoriesController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a category' })
   @ApiResponse({
     status: 200,

@@ -9,7 +9,7 @@ export class ReceivablesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createReceivableDto: CreateReceivableDto) {
-    return this.prisma.receivabless.create({
+    return this.prisma.receivables.create({
       data: {
         id: uuid(),
         ...createReceivableDto,
@@ -18,7 +18,7 @@ export class ReceivablesService {
   }
 
   async findAll(businessId?: string, skip = 0, take = 10) {
-    return this.prisma.receivabless.findMany({
+    return this.prisma.receivables.findMany({
       where: businessId ? { business_id: businessId } : {},
       skip,
       take,
@@ -26,7 +26,7 @@ export class ReceivablesService {
   }
 
   async findOne(id: string) {
-    const receivable = await this.prisma.receivabless.findUnique({
+    const receivable = await this.prisma.receivables.findUnique({
       where: { id },
     });
 
@@ -38,26 +38,26 @@ export class ReceivablesService {
   }
 
   async update(id: string, updateReceivableDto: UpdateReceivableDto) {
-    const receivable = await this.prisma.receivabless.findUnique({ where: { id } });
+    const receivable = await this.prisma.receivables.findUnique({ where: { id } });
 
     if (!receivable) {
       throw new NotFoundException('Receivable not found');
     }
 
-    return this.prisma.receivabless.update({
+    return this.prisma.receivables.update({
       where: { id },
       data: updateReceivableDto,
     });
   }
 
   async remove(id: string) {
-    const receivable = await this.prisma.receivabless.findUnique({ where: { id } });
+    const receivable = await this.prisma.receivables.findUnique({ where: { id } });
 
     if (!receivable) {
       throw new NotFoundException('Receivable not found');
     }
 
-    return this.prisma.receivabless.delete({ where: { id } });
+    return this.prisma.receivables.delete({ where: { id } });
   }
 }
 

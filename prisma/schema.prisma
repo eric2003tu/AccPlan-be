@@ -8,6 +8,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Prisma seed
+// Run with: npx prisma db seed
+
+
 model accounts {
   id          String        @id @db.Char(36)
   business_id String        @db.Char(36)
@@ -144,12 +148,14 @@ model products {
 }
 
 model purchase_items {
-  id          String  @id @db.Char(36)
-  purchase_id String  @db.Char(36)
+  id          String @id @db.Char(36)
+  purchase_id String @db.Char(36)
   product_id  String? @db.Char(36)
   qty         Int
   unit_cost   Decimal @db.Decimal(12, 2)
   total       Decimal @db.Decimal(12, 2)
+
+  purchase purchases @relation(fields: [purchase_id], references: [id], onDelete: Cascade)
 
   @@index([purchase_id], map: "idx_purchase_items_purchase")
 }
@@ -162,6 +168,8 @@ model purchases {
   total         Decimal?          @default(0.00) @db.Decimal(12, 2)
   paid          Decimal?          @default(0.00) @db.Decimal(12, 2)
   status        purchases_status? @default(PENDING)
+
+  items purchase_items[]
 
   @@index([business_id], map: "idx_purchases_business")
 }
@@ -195,12 +203,14 @@ model reports {
 }
 
 model sale_items {
-  id         String  @id @db.Char(36)
-  sale_id    String  @db.Char(36)
+  id         String @id @db.Char(36)
+  sale_id    String @db.Char(36)
   product_id String? @db.Char(36)
   qty        Int
   unit_price Decimal @db.Decimal(12, 2)
   total      Decimal @db.Decimal(12, 2)
+
+  sale sales @relation(fields: [sale_id], references: [id], onDelete: Cascade)
 
   @@index([sale_id], map: "idx_sale_items_sale")
 }
@@ -213,6 +223,8 @@ model sales {
   total       Decimal?      @default(0.00) @db.Decimal(12, 2)
   paid        Decimal?      @default(0.00) @db.Decimal(12, 2)
   status      sales_status? @default(PENDING)
+
+  items sale_items[]
 
   @@index([business_id], map: "idx_sales_business")
 }

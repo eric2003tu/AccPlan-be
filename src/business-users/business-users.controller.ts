@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { BusinessUsersService } from './business-users.service';
 import { CreateBusinessUserDto } from './dto/create-business-user.dto';
 import { UpdateBusinessUserDto } from './dto/update-business-user.dto';
@@ -7,6 +8,7 @@ import { DeleteBusinessUserDto } from './dto/delete-business-user.dto';
 import { BusinessUserDto } from './dto/business-user.dto';
 
 @ApiTags('Business Users')
+@ApiBearerAuth('access-token')
 @Controller('business-users')
 export class BusinessUsersController {
   constructor(private readonly businessUsersService: BusinessUsersService) {}
@@ -23,6 +25,7 @@ export class BusinessUsersController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Get all business users' })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { PayablesService } from './payables.service';
 import { CreatePayableDto } from './dto/create-payable.dto';
 import { UpdatePayableDto } from './dto/update-payable.dto';
@@ -7,11 +8,13 @@ import { DeletePayableDto } from './dto/delete-payable.dto';
 import { PayableDto } from './dto/payable.dto';
 
 @ApiTags('Payables')
+@ApiBearerAuth('access-token')
 @Controller('payables')
 export class PayablesController {
   constructor(private readonly payablesService: PayablesService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Create a new payable' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class PayablesController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all payables' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class PayablesController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a payable' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class PayablesController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a payable' })
   @ApiResponse({
     status: 200,

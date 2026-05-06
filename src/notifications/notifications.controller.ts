@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { UpdateNotificationDto } from './dto/update-notification.dto';
@@ -7,11 +8,13 @@ import { DeleteNotificationDto } from './dto/delete-notification.dto';
 import { NotificationDto } from './dto/notification.dto';
 
 @ApiTags('Notifications')
+@ApiBearerAuth('access-token')
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Create a new notification' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class NotificationsController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all notifications' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class NotificationsController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a notification' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class NotificationsController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a notification' })
   @ApiResponse({
     status: 200,

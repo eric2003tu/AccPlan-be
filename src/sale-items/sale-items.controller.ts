@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { SaleItemsService } from './sale-items.service';
 import { CreateSaleItemDto } from './dto/create-sale-item.dto';
 import { UpdateSaleItemDto } from './dto/update-sale-item.dto';
@@ -7,11 +8,13 @@ import { DeleteSaleItemDto } from './dto/delete-sale-item.dto';
 import { SaleItemDto } from './dto/sale-item.dto';
 
 @ApiTags('Sale Items')
+@ApiBearerAuth('access-token')
 @Controller('sale-items')
 export class SaleItemsController {
   constructor(private readonly saleItemsService: SaleItemsService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Create a new sale item' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class SaleItemsController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all sale items' })
   @ApiQuery({ name: 'saleId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class SaleItemsController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a sale item' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class SaleItemsController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a sale item' })
   @ApiResponse({
     status: 200,

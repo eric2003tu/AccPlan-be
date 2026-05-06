@@ -9,7 +9,7 @@ export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createProductDto: CreateProductDto) {
-    return this.prisma.productss.create({
+    return this.prisma.products.create({
       data: {
         id: uuid(),
         ...createProductDto,
@@ -18,7 +18,7 @@ export class ProductsService {
   }
 
   async findAll(businessId?: string, skip = 0, take = 10) {
-    return this.prisma.productss.findMany({
+    return this.prisma.products.findMany({
       where: businessId ? { business_id: businessId } : {},
       skip,
       take,
@@ -26,7 +26,7 @@ export class ProductsService {
   }
 
   async findOne(id: string) {
-    const product = await this.prisma.productss.findUnique({
+    const product = await this.prisma.products.findUnique({
       where: { id },
     });
 
@@ -38,27 +38,28 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-    const product = await this.prisma.productss.findUnique({ where: { id } });
+    const product = await this.prisma.products.findUnique({ where: { id } });
 
     if (!product) {
       throw new NotFoundException('Product not found');
     }
 
-    return this.prisma.productss.update({
+    return this.prisma.products.update({
       where: { id },
       data: updateProductDto,
     });
   }
 
   async remove(id: string) {
-    const product = await this.prisma.productss.findUnique({ where: { id } });
+    const product = await this.prisma.products.findUnique({ where: { id } });
 
     if (!product) {
       throw new NotFoundException('Product not found');
     }
 
-    return this.prisma.productss.delete({ where: { id } });
+    return this.prisma.products.delete({ where: { id } });
   }
 }
+
 
 

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { FiscalYearsService } from './fiscal-years.service';
 import { CreateFiscalYearDto } from './dto/create-fiscal-year.dto';
 import { UpdateFiscalYearDto } from './dto/update-fiscal-year.dto';
@@ -7,11 +8,13 @@ import { DeleteFiscalYearDto } from './dto/delete-fiscal-year.dto';
 import { FiscalYearDto } from './dto/fiscal-year.dto';
 
 @ApiTags('Fiscal Years')
+@ApiBearerAuth('access-token')
 @Controller('fiscal-years')
 export class FiscalYearsController {
   constructor(private readonly fiscalYearsService: FiscalYearsService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Create a new fiscal year' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class FiscalYearsController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all fiscal years' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class FiscalYearsController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a fiscal year' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class FiscalYearsController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a fiscal year' })
   @ApiResponse({
     status: 200,

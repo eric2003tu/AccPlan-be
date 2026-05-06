@@ -9,7 +9,7 @@ export class PayablesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createPayableDto: CreatePayableDto) {
-    return this.prisma.payabless.create({
+    return this.prisma.payables.create({
       data: {
         id: uuid(),
         ...createPayableDto,
@@ -18,7 +18,7 @@ export class PayablesService {
   }
 
   async findAll(businessId?: string, skip = 0, take = 10) {
-    return this.prisma.payabless.findMany({
+    return this.prisma.payables.findMany({
       where: businessId ? { business_id: businessId } : {},
       skip,
       take,
@@ -26,7 +26,7 @@ export class PayablesService {
   }
 
   async findOne(id: string) {
-    const payable = await this.prisma.payabless.findUnique({
+    const payable = await this.prisma.payables.findUnique({
       where: { id },
     });
 
@@ -38,26 +38,26 @@ export class PayablesService {
   }
 
   async update(id: string, updatePayableDto: UpdatePayableDto) {
-    const payable = await this.prisma.payabless.findUnique({ where: { id } });
+    const payable = await this.prisma.payables.findUnique({ where: { id } });
 
     if (!payable) {
       throw new NotFoundException('Payable not found');
     }
 
-    return this.prisma.payabless.update({
+    return this.prisma.payables.update({
       where: { id },
       data: updatePayableDto,
     });
   }
 
   async remove(id: string) {
-    const payable = await this.prisma.payabless.findUnique({ where: { id } });
+    const payable = await this.prisma.payables.findUnique({ where: { id } });
 
     if (!payable) {
       throw new NotFoundException('Payable not found');
     }
 
-    return this.prisma.payabless.delete({ where: { id } });
+    return this.prisma.payables.delete({ where: { id } });
   }
 }
 

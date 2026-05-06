@@ -9,7 +9,7 @@ export class NotificationsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createNotificationDto: CreateNotificationDto) {
-    return this.prisma.notificationss.create({
+    return this.prisma.notifications.create({
       data: {
         id: uuid(),
         ...createNotificationDto,
@@ -18,7 +18,7 @@ export class NotificationsService {
   }
 
   async findAll(businessId?: string, skip = 0, take = 10) {
-    return this.prisma.notificationss.findMany({
+    return this.prisma.notifications.findMany({
       where: businessId ? { business_id: businessId } : {},
       skip,
       take,
@@ -26,7 +26,7 @@ export class NotificationsService {
   }
 
   async findOne(id: string) {
-    const notification = await this.prisma.notificationss.findUnique({
+    const notification = await this.prisma.notifications.findUnique({
       where: { id },
     });
 
@@ -38,26 +38,26 @@ export class NotificationsService {
   }
 
   async update(id: string, updateNotificationDto: UpdateNotificationDto) {
-    const notification = await this.prisma.notificationss.findUnique({ where: { id } });
+    const notification = await this.prisma.notifications.findUnique({ where: { id } });
 
     if (!notification) {
       throw new NotFoundException('Notification not found');
     }
 
-    return this.prisma.notificationss.update({
+    return this.prisma.notifications.update({
       where: { id },
       data: updateNotificationDto,
     });
   }
 
   async remove(id: string) {
-    const notification = await this.prisma.notificationss.findUnique({ where: { id } });
+    const notification = await this.prisma.notifications.findUnique({ where: { id } });
 
     if (!notification) {
       throw new NotFoundException('Notification not found');
     }
 
-    return this.prisma.notificationss.delete({ where: { id } });
+    return this.prisma.notifications.delete({ where: { id } });
   }
 }
 

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { JournalEntriesService } from './journal-entries.service';
 import { CreateJournalEntryDto } from './dto/create-journal-entry.dto';
 import { UpdateJournalEntryDto } from './dto/update-journal-entry.dto';
@@ -7,11 +8,13 @@ import { DeleteJournalEntryDto } from './dto/delete-journal-entry.dto';
 import { JournalEntryDto } from './dto/journal-entry.dto';
 
 @ApiTags('Journal Entries')
+@ApiBearerAuth('access-token')
 @Controller('journal-entries')
 export class JournalEntriesController {
   constructor(private readonly journalEntriesService: JournalEntriesService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Create a new journal entry' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class JournalEntriesController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all journal entries' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class JournalEntriesController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a journal entry' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class JournalEntriesController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a journal entry' })
   @ApiResponse({
     status: 200,

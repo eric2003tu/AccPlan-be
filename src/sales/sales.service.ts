@@ -9,7 +9,7 @@ export class SalesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createSaleDto: CreateSaleDto) {
-    return this.prisma.saless.create({
+    return this.prisma.sales.create({
       data: {
         id: uuid(),
         ...createSaleDto,
@@ -19,7 +19,7 @@ export class SalesService {
   }
 
   async findAll(businessId?: string, skip = 0, take = 10) {
-    return this.prisma.saless.findMany({
+    return this.prisma.sales.findMany({
       where: businessId ? { business_id: businessId } : {},
       skip,
       take,
@@ -28,7 +28,7 @@ export class SalesService {
   }
 
   async findOne(id: string) {
-    const sale = await this.prisma.saless.findUnique({
+    const sale = await this.prisma.sales.findUnique({
       where: { id },
       include: { items: true },
     });
@@ -41,13 +41,13 @@ export class SalesService {
   }
 
   async update(id: string, updateSaleDto: UpdateSaleDto) {
-    const sale = await this.prisma.saless.findUnique({ where: { id } });
+    const sale = await this.prisma.sales.findUnique({ where: { id } });
 
     if (!sale) {
       throw new NotFoundException('Sale not found');
     }
 
-    return this.prisma.saless.update({
+    return this.prisma.sales.update({
       where: { id },
       data: updateSaleDto,
       include: { items: true },
@@ -55,13 +55,13 @@ export class SalesService {
   }
 
   async remove(id: string) {
-    const sale = await this.prisma.saless.findUnique({ where: { id } });
+    const sale = await this.prisma.sales.findUnique({ where: { id } });
 
     if (!sale) {
       throw new NotFoundException('Sale not found');
     }
 
-    return this.prisma.saless.delete({
+    return this.prisma.sales.delete({
       where: { id },
       include: { items: true },
     });

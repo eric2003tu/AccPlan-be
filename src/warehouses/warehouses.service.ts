@@ -9,7 +9,7 @@ export class WarehousesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createWarehouseDto: CreateWarehouseDto) {
-    return this.prisma.warehousess.create({
+    return this.prisma.warehouses.create({
       data: {
         id: uuid(),
         ...createWarehouseDto,
@@ -18,7 +18,7 @@ export class WarehousesService {
   }
 
   async findAll(businessId?: string, skip = 0, take = 10) {
-    return this.prisma.warehousess.findMany({
+    return this.prisma.warehouses.findMany({
       where: businessId ? { business_id: businessId } : {},
       skip,
       take,
@@ -26,7 +26,7 @@ export class WarehousesService {
   }
 
   async findOne(id: string) {
-    const warehouse = await this.prisma.warehousess.findUnique({
+    const warehouse = await this.prisma.warehouses.findUnique({
       where: { id },
     });
 
@@ -38,26 +38,26 @@ export class WarehousesService {
   }
 
   async update(id: string, updateWarehouseDto: UpdateWarehouseDto) {
-    const warehouse = await this.prisma.warehousess.findUnique({ where: { id } });
+    const warehouse = await this.prisma.warehouses.findUnique({ where: { id } });
 
     if (!warehouse) {
       throw new NotFoundException('Warehouse not found');
     }
 
-    return this.prisma.warehousess.update({
+    return this.prisma.warehouses.update({
       where: { id },
       data: updateWarehouseDto,
     });
   }
 
   async remove(id: string) {
-    const warehouse = await this.prisma.warehousess.findUnique({ where: { id } });
+    const warehouse = await this.prisma.warehouses.findUnique({ where: { id } });
 
     if (!warehouse) {
       throw new NotFoundException('Warehouse not found');
     }
 
-    return this.prisma.warehousess.delete({ where: { id } });
+    return this.prisma.warehouses.delete({ where: { id } });
   }
 }
 

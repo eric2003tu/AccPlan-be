@@ -11,6 +11,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { Public } from './public.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -18,6 +19,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Public()
   @ApiOperation({ summary: 'Register a new user account' })
   @ApiBody({ type: RegisterDto })
   @ApiResponse({ status: 201, description: 'User registered', type: AuthResponseDto })
@@ -26,6 +28,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Public()
   @ApiOperation({ summary: 'Login and receive a JWT access token' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, description: 'Login successful', type: AuthResponseDto })

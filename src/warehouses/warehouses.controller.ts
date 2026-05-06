@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { WarehousesService } from './warehouses.service';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
@@ -7,11 +8,13 @@ import { DeleteWarehouseDto } from './dto/delete-warehouse.dto';
 import { WarehouseDto } from './dto/warehouse.dto';
 
 @ApiTags('Warehouses')
+@ApiBearerAuth('access-token')
 @Controller('warehouses')
 export class WarehousesController {
   constructor(private readonly warehousesService: WarehousesService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Create a new warehouse' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class WarehousesController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all warehouses' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class WarehousesController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a warehouse' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class WarehousesController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a warehouse' })
   @ApiResponse({
     status: 200,

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { JournalLinesService } from './journal-lines.service';
 import { CreateJournalLineDto } from './dto/create-journal-line.dto';
 import { UpdateJournalLineDto } from './dto/update-journal-line.dto';
@@ -7,11 +8,13 @@ import { DeleteJournalLineDto } from './dto/delete-journal-line.dto';
 import { JournalLineDto } from './dto/journal-line.dto';
 
 @ApiTags('Journal Lines')
+@ApiBearerAuth('access-token')
 @Controller('journal-lines')
 export class JournalLinesController {
   constructor(private readonly journalLinesService: JournalLinesService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Create a new journal line' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class JournalLinesController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all journal lines' })
   @ApiQuery({ name: 'journalId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class JournalLinesController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a journal line' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class JournalLinesController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a journal line' })
   @ApiResponse({
     status: 200,

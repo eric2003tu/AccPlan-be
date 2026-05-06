@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { PurchaseItemsService } from './purchase-items.service';
 import { CreatePurchaseItemDto } from './dto/create-purchase-item.dto';
 import { UpdatePurchaseItemDto } from './dto/update-purchase-item.dto';
@@ -7,11 +8,13 @@ import { DeletePurchaseItemDto } from './dto/delete-purchase-item.dto';
 import { PurchaseItemDto } from './dto/purchase-item.dto';
 
 @ApiTags('Purchase Items')
+@ApiBearerAuth('access-token')
 @Controller('purchase-items')
 export class PurchaseItemsController {
   constructor(private readonly purchaseItemsService: PurchaseItemsService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Create a new purchase item' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class PurchaseItemsController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all purchase items' })
   @ApiQuery({ name: 'purchaseId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class PurchaseItemsController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a purchase item' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class PurchaseItemsController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a purchase item' })
   @ApiResponse({
     status: 200,

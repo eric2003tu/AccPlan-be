@@ -14,7 +14,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const existingUser = await this.prisma.userss.findUnique({
+    const existingUser = await this.prisma.users.findUnique({
       where: { email: registerDto.email },
     });
 
@@ -24,7 +24,7 @@ export class AuthService {
 
     const hashedPassword = await hash(registerDto.password, 10);
 
-    const user = await this.prisma.userss.create({
+    const user = await this.prisma.users.create({
       data: {
         id: randomUUID(),
         first_name: registerDto.first_name,
@@ -53,7 +53,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.prisma.userss.findUnique({
+    const user = await this.prisma.users.findUnique({
       where: { email: loginDto.email },
       select: {
         id: true,

@@ -9,7 +9,7 @@ export class PurchasesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createPurchaseDto: CreatePurchaseDto) {
-    return this.prisma.purchasess.create({
+    return this.prisma.purchases.create({
       data: {
         id: uuid(),
         ...createPurchaseDto,
@@ -19,7 +19,7 @@ export class PurchasesService {
   }
 
   async findAll(businessId?: string, skip = 0, take = 10) {
-    return this.prisma.purchasess.findMany({
+    return this.prisma.purchases.findMany({
       where: businessId ? { business_id: businessId } : {},
       skip,
       take,
@@ -28,7 +28,7 @@ export class PurchasesService {
   }
 
   async findOne(id: string) {
-    const purchase = await this.prisma.purchasess.findUnique({
+    const purchase = await this.prisma.purchases.findUnique({
       where: { id },
       include: { items: true },
     });
@@ -41,13 +41,13 @@ export class PurchasesService {
   }
 
   async update(id: string, updatePurchaseDto: UpdatePurchaseDto) {
-    const purchase = await this.prisma.purchasess.findUnique({ where: { id } });
+    const purchase = await this.prisma.purchases.findUnique({ where: { id } });
 
     if (!purchase) {
       throw new NotFoundException('Purchase not found');
     }
 
-    return this.prisma.purchasess.update({
+    return this.prisma.purchases.update({
       where: { id },
       data: updatePurchaseDto,
       include: { items: true },
@@ -55,13 +55,13 @@ export class PurchasesService {
   }
 
   async remove(id: string) {
-    const purchase = await this.prisma.purchasess.findUnique({ where: { id } });
+    const purchase = await this.prisma.purchases.findUnique({ where: { id } });
 
     if (!purchase) {
       throw new NotFoundException('Purchase not found');
     }
 
-    return this.prisma.purchasess.delete({
+    return this.prisma.purchases.delete({
       where: { id },
       include: { items: true },
     });

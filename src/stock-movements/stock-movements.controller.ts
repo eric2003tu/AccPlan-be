@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { StockMovementsService } from './stock-movements.service';
 import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
 import { UpdateStockMovementDto } from './dto/update-stock-movement.dto';
@@ -7,11 +8,13 @@ import { DeleteStockMovementDto } from './dto/delete-stock-movement.dto';
 import { StockMovementDto } from './dto/stock-movement.dto';
 
 @ApiTags('Stock Movements')
+@ApiBearerAuth('access-token')
 @Controller('stock-movements')
 export class StockMovementsController {
   constructor(private readonly stockMovementsService: StockMovementsService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Create a new stock movement' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class StockMovementsController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all stock movements' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class StockMovementsController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a stock movement' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class StockMovementsController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a stock movement' })
   @ApiResponse({
     status: 200,

@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { ReportsService } from './reports.service';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
@@ -8,11 +9,13 @@ import { GenerateDailyReportsDto } from './dto/generate-daily-reports.dto';
 import { ReportDto } from './dto/report.dto';
 
 @ApiTags('Reports')
+@ApiBearerAuth('access-token')
 @Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Post('generate-daily')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Generate daily financial statements from journal entries' })
   @ApiBody({ type: GenerateDailyReportsDto, required: false })
   @ApiResponse({
@@ -26,6 +29,7 @@ export class ReportsController {
   }
 
   @Post()
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Create a new report' })
   @ApiResponse({
     status: 201,
@@ -37,6 +41,7 @@ export class ReportsController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all reports' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -56,6 +61,7 @@ export class ReportsController {
   }
 
   @Get(':id')
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get a report by ID' })
   @ApiResponse({
     status: 200,
@@ -71,6 +77,7 @@ export class ReportsController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a report' })
   @ApiResponse({
     status: 200,
@@ -82,6 +89,7 @@ export class ReportsController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a report' })
   @ApiResponse({
     status: 200,

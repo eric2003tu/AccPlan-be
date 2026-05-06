@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Roles } from '../auth/roles.decorator';
 import { ReceivablesService } from './receivables.service';
 import { CreateReceivableDto } from './dto/create-receivable.dto';
 import { UpdateReceivableDto } from './dto/update-receivable.dto';
@@ -7,11 +8,13 @@ import { DeleteReceivableDto } from './dto/delete-receivable.dto';
 import { ReceivableDto } from './dto/receivable.dto';
 
 @ApiTags('Receivables')
+@ApiBearerAuth('access-token')
 @Controller('receivables')
 export class ReceivablesController {
   constructor(private readonly receivablesService: ReceivablesService) {}
 
   @Post()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Create a new receivable' })
   @ApiResponse({
     status: 201,
@@ -23,6 +26,7 @@ export class ReceivablesController {
   }
 
   @Get()
+  @Roles('OWNER', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Get all receivables' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
@@ -57,6 +61,7 @@ export class ReceivablesController {
   }
 
   @Put(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Update a receivable' })
   @ApiResponse({
     status: 200,
@@ -68,6 +73,7 @@ export class ReceivablesController {
   }
 
   @Delete(':id')
+  @Roles('OWNER', 'ADMIN')
   @ApiOperation({ summary: 'Delete a receivable' })
   @ApiResponse({
     status: 200,

@@ -562,5 +562,3 @@ export class ReportsService implements OnModuleInit, OnModuleDestroy {
     );
   }
 }
-
-
