@@ -1,0 +1,93 @@
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBody } from '@nestjs/swagger';
+import { ReportsService } from './reports.service';
+import { CreateReportDto } from './dto/create-report.dto';
+import { UpdateReportDto } from './dto/update-report.dto';
+import { DeleteReportDto } from './dto/delete-report.dto';
+import { GenerateDailyReportsDto } from './dto/generate-daily-reports.dto';
+import { ReportDto } from './dto/report.dto';
+
+@ApiTags('Reports')
+@Controller('reports')
+export class ReportsController {
+  constructor(private readonly reportsService: ReportsService) {}
+
+  @Post('generate-daily')
+  @ApiOperation({ summary: 'Generate daily financial statements from journal entries' })
+  @ApiBody({ type: GenerateDailyReportsDto, required: false })
+  @ApiResponse({
+    status: 201,
+    description: 'Daily financial statements generated successfully',
+    isArray: true,
+    type: ReportDto,
+  })
+  generateDaily(@Body() generateDailyReportsDto: GenerateDailyReportsDto) {
+    return this.reportsService.generateDailyFinancialStatements(generateDailyReportsDto.asOfDate);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new report' })
+  @ApiResponse({
+    status: 201,
+    description: 'Report created successfully',
+    type: ReportDto,
+  })
+  create(@Body() createReportDto: CreateReportDto) {
+    return this.reportsService.create(createReportDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get all reports' })
+  @ApiQuery({ name: 'businessId', required: false, type: String })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'take', required: false, type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'List of reports',
+    isArray: true,
+    type: ReportDto,
+  })
+  findAll(
+    @Query('businessId') businessId?: string,
+    @Query('skip') skip = 0,
+    @Query('take') take = 10,
+  ) {
+    return this.reportsService.findAll(businessId, +skip, +take);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a report by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Report found',
+    type: ReportDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Report not found',
+  })
+  findOne(@Param('id') id: string) {
+    return this.reportsService.findOne(id);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a report' })
+  @ApiResponse({
+    status: 200,
+    description: 'Report updated successfully',
+    type: ReportDto,
+  })
+  update(@Param('id') id: string, @Body() updateReportDto: UpdateReportDto) {
+    return this.reportsService.update(id, updateReportDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a report' })
+  @ApiResponse({
+    status: 200,
+    description: 'Report deleted successfully',
+  })
+  remove(@Param() deleteReportDto: DeleteReportDto) {
+    return this.reportsService.remove(deleteReportDto.id);
+  }
+}
