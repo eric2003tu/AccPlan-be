@@ -67,6 +67,13 @@ export class ReportsService implements OnModuleInit, OnModuleDestroy {
   constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
+    const enableDaily = process.env.ENABLE_DAILY_REPORTS !== 'false';
+
+    if (!enableDaily) {
+      this.logger.log('Automatic daily report generation is disabled (ENABLE_DAILY_REPORTS=false)');
+      return;
+    }
+
     try {
       await this.generateDailyFinancialStatements();
     } catch (error) {
