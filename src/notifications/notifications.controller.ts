@@ -14,8 +14,8 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Create a new notification' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new notification', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Notification created successfully',
@@ -26,8 +26,8 @@ export class NotificationsController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all notifications' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all notifications', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class NotificationsController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a notification' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a notification', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Notification updated successfully',
@@ -73,8 +73,8 @@ export class NotificationsController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a notification' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a notification', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Notification deleted successfully',

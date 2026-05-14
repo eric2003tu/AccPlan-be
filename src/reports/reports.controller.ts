@@ -15,8 +15,8 @@ export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Post('generate-daily')
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Generate daily financial statements from journal entries' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Generate daily financial statements from journal entries', description: 'Only Owner and Manager are allowed' })
   @ApiBody({ type: GenerateDailyReportsDto, required: false })
   @ApiResponse({
     status: 201,
@@ -29,8 +29,8 @@ export class ReportsController {
   }
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Create a new report' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new report', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Report created successfully',
@@ -41,8 +41,8 @@ export class ReportsController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all reports' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all reports', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class ReportsController {
   }
 
   @Get(':id')
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get a report by ID' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get a report by ID', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Report found',
@@ -77,8 +77,8 @@ export class ReportsController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a report' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a report', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Report updated successfully',
@@ -89,8 +89,8 @@ export class ReportsController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a report' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a report', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Report deleted successfully',

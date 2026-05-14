@@ -14,8 +14,8 @@ export class PayablesController {
   constructor(private readonly payablesService: PayablesService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Create a new payable' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new payable', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Payable created successfully',
@@ -26,8 +26,8 @@ export class PayablesController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all payables' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all payables', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class PayablesController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a payable' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a payable', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Payable updated successfully',
@@ -73,8 +73,8 @@ export class PayablesController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a payable' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a payable', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Payable deleted successfully',

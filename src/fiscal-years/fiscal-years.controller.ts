@@ -14,8 +14,8 @@ export class FiscalYearsController {
   constructor(private readonly fiscalYearsService: FiscalYearsService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Create a new fiscal year' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new fiscal year', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Fiscal year created successfully',
@@ -26,8 +26,8 @@ export class FiscalYearsController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all fiscal years' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all fiscal years', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class FiscalYearsController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a fiscal year' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a fiscal year', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Fiscal year updated successfully',
@@ -73,8 +73,8 @@ export class FiscalYearsController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a fiscal year' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a fiscal year', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Fiscal year deleted successfully',

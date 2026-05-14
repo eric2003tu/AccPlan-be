@@ -14,8 +14,8 @@ export class JournalEntriesController {
   constructor(private readonly journalEntriesService: JournalEntriesService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Create a new journal entry' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new journal entry', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Journal entry created successfully',
@@ -26,8 +26,8 @@ export class JournalEntriesController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all journal entries' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all journal entries', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class JournalEntriesController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a journal entry' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a journal entry', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Journal entry updated successfully',
@@ -73,8 +73,8 @@ export class JournalEntriesController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a journal entry' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a journal entry', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Journal entry deleted successfully',

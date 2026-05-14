@@ -14,8 +14,8 @@ export class PurchaseItemsController {
   constructor(private readonly purchaseItemsService: PurchaseItemsService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Create a new purchase item' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new purchase item', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Purchase item created successfully',
@@ -26,8 +26,8 @@ export class PurchaseItemsController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all purchase items' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all purchase items', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'purchaseId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class PurchaseItemsController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a purchase item' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a purchase item', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Purchase item updated successfully',
@@ -73,8 +73,8 @@ export class PurchaseItemsController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a purchase item' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a purchase item', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Purchase item deleted successfully',

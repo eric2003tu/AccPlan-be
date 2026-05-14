@@ -14,8 +14,8 @@ export class StockMovementsController {
   constructor(private readonly stockMovementsService: StockMovementsService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Create a new stock movement' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new stock movement', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Stock movement created successfully',
@@ -26,8 +26,8 @@ export class StockMovementsController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all stock movements' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all stock movements', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class StockMovementsController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a stock movement' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a stock movement', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Stock movement updated successfully',
@@ -73,8 +73,8 @@ export class StockMovementsController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a stock movement' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a stock movement', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Stock movement deleted successfully',

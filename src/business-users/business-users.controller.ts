@@ -14,7 +14,8 @@ export class BusinessUsersController {
   constructor(private readonly businessUsersService: BusinessUsersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Assign user to business' })
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Assign user to business', description: 'System Admin only - for managing user-business assignments' })
   @ApiResponse({
     status: 201,
     description: 'User assigned to business successfully',
@@ -25,8 +26,8 @@ export class BusinessUsersController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Get all business users' })
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Get all business users', description: 'System Admin only' })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
   @ApiResponse({
@@ -55,7 +56,8 @@ export class BusinessUsersController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update business user role' })
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Update business user role', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
     description: 'Business user updated successfully',
@@ -66,7 +68,8 @@ export class BusinessUsersController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Remove user from business' })
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Remove user from business', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
     description: 'User removed from business successfully',

@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -20,7 +20,7 @@ model accounts {
   type        accounts_type
   parent_id   String?       @db.Char(36)
 
-  @@index([business_id], map: "idx_accounts_business")
+  @@index([business_id], map: "idx_accounts_business_id")
 }
 
 model business_users {
@@ -29,8 +29,8 @@ model business_users {
   user_id     String              @db.Char(36)
   role        business_users_role
 
-  @@unique([business_id, user_id], map: "business_id")
-  @@index([user_id], map: "user_id")
+  @@unique([business_id, user_id], map: "business_id_user_id_unique")
+  @@index([user_id], map: "idx_business_users_user")
 }
 
 model businesses {
@@ -47,6 +47,8 @@ model categories {
   id          Int     @id @default(autoincrement())
   business_id String? @db.Char(36)
   name        String  @db.VarChar(100)
+
+  @@index([business_id], map: "idx_categories_business_id")
 }
 
 model contacts {
@@ -57,7 +59,7 @@ model contacts {
   phone       String?       @db.VarChar(50)
   email       String?       @db.VarChar(150)
 
-  @@index([business_id], map: "business_id")
+  @@index([business_id], map: "idx_contacts_business_id")
 }
 
 model fiscal_years {
@@ -68,7 +70,7 @@ model fiscal_years {
   end_date    DateTime?            @db.Date
   status      fiscal_years_status? @default(OPEN)
 
-  @@index([business_id], map: "business_id")
+  @@index([business_id], map: "idx_fiscal_years_business_id")
 }
 
 model journal_entries {
@@ -116,7 +118,7 @@ model notifications {
   type        notifications_type?
   created_at  DateTime?           @default(now()) @db.Timestamp(0)
 
-  @@index([business_id], map: "business_id")
+  @@index([business_id], map: "idx_notifications_business_id")
 }
 
 model payables {
@@ -193,13 +195,13 @@ model reports {
   type         reports_type?
   period_start DateTime?     @db.Date
   period_end   DateTime?     @db.Date
-  data         String?       @db.LongText
+  data         String?       @db.Text
   file_url     String?       @db.VarChar(255)
   status       String?       @default("GENERATED") @db.VarChar(50)
   format       String?       @default("JSON") @db.VarChar(20)
   generated_at DateTime?     @default(now()) @db.Timestamp(0)
 
-  @@index([business_id], map: "business_id")
+  @@index([business_id], map: "idx_reports_business_id")
 }
 
 model sale_items {

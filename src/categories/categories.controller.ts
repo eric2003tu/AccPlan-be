@@ -14,8 +14,8 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Create a new category' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new category', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Category created successfully',
@@ -26,8 +26,8 @@ export class CategoriesController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all categories' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all categories', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class CategoriesController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a category' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a category', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Category updated successfully',
@@ -73,8 +73,8 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a category' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a category', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Category deleted successfully',

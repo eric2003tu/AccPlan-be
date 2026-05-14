@@ -14,8 +14,8 @@ export class ReceivablesController {
   constructor(private readonly receivablesService: ReceivablesService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Create a new receivable' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new receivable', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Receivable created successfully',
@@ -26,8 +26,8 @@ export class ReceivablesController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all receivables' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all receivables', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class ReceivablesController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a receivable' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a receivable', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Receivable updated successfully',
@@ -73,8 +73,8 @@ export class ReceivablesController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a receivable' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a receivable', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Receivable deleted successfully',

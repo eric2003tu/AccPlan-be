@@ -14,8 +14,8 @@ export class WarehousesController {
   constructor(private readonly warehousesService: WarehousesService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Create a new warehouse' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new warehouse', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Warehouse created successfully',
@@ -26,8 +26,8 @@ export class WarehousesController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all warehouses' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all warehouses', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class WarehousesController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a warehouse' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a warehouse', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Warehouse updated successfully',
@@ -73,8 +73,8 @@ export class WarehousesController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a warehouse' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a warehouse', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Warehouse deleted successfully',

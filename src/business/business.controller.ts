@@ -14,8 +14,8 @@ export class BusinessController {
   constructor(private readonly businessService: BusinessService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Create a new business' })
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Create a new business', description: 'System Admin only - for creating business entities' })
   @ApiResponse({
     status: 201,
     description: 'Business created successfully',
@@ -26,8 +26,8 @@ export class BusinessController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all businesses' })
+  @Roles('OWNER', 'MANAGER', 'ADMIN')
+  @ApiOperation({ summary: 'Get all businesses', description: 'Owner/Manager can see their businesses, Admin can see all' })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
   @ApiResponse({
@@ -56,8 +56,8 @@ export class BusinessController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a business' })
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Update a business', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
     description: 'Business updated successfully',
@@ -68,8 +68,8 @@ export class BusinessController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a business' })
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Delete a business', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
     description: 'Business deleted successfully',

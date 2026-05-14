@@ -14,8 +14,8 @@ export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Create a new account' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new account', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Account created successfully',
@@ -26,8 +26,8 @@ export class AccountsController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all accounts' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all accounts', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class AccountsController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update an account' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update an account', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Account updated successfully',
@@ -73,8 +73,8 @@ export class AccountsController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete an account' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete an account', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Account deleted successfully',

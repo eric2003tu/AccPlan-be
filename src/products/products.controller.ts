@@ -14,8 +14,8 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Create a new product' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new product', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Product created successfully',
@@ -26,8 +26,8 @@ export class ProductsController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all products' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all products', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class ProductsController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a product' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a product', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Product updated successfully',
@@ -73,8 +73,8 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a product' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a product', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Product deleted successfully',

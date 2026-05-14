@@ -14,8 +14,8 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Create a new sale' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Create a new sale', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 201,
     description: 'Sale created successfully',
@@ -26,8 +26,8 @@ export class SalesController {
   }
 
   @Get()
-  @Roles('OWNER', 'ADMIN', 'MANAGER')
-  @ApiOperation({ summary: 'Get all sales' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Get all sales', description: 'Only Owner and Manager are allowed' })
   @ApiQuery({ name: 'businessId', required: false, type: String })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -61,8 +61,8 @@ export class SalesController {
   }
 
   @Put(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Update a sale' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Update a sale', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Sale updated successfully',
@@ -73,8 +73,8 @@ export class SalesController {
   }
 
   @Delete(':id')
-  @Roles('OWNER', 'ADMIN')
-  @ApiOperation({ summary: 'Delete a sale' })
+  @Roles('OWNER', 'MANAGER')
+  @ApiOperation({ summary: 'Delete a sale', description: 'Only Owner and Manager are allowed' })
   @ApiResponse({
     status: 200,
     description: 'Sale deleted successfully',
