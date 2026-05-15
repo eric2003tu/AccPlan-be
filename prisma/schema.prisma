@@ -20,6 +20,11 @@ model accounts {
   type        accounts_type
   parent_id   String?       @db.Char(36)
 
+  business    businesses    @relation(fields: [business_id], references: [id])
+  parent      accounts?     @relation("accounts_parent", fields: [parent_id], references: [id])
+  children    accounts[]    @relation("accounts_parent")
+  journal_lines journal_lines[] @relation("journal_line_account")
+
   @@index([business_id], map: "idx_accounts_business_id")
 }
 
@@ -28,6 +33,9 @@ model business_users {
   business_id String              @db.Char(36)
   user_id     String              @db.Char(36)
   role        business_users_role
+
+  business    businesses          @relation(fields: [business_id], references: [id])
+  user        users                @relation("user_business_memberships", fields: [user_id], references: [id])
 
   @@unique([business_id, user_id], map: "business_id_user_id_unique")
   @@index([user_id], map: "idx_business_users_user")
@@ -41,12 +49,31 @@ model businesses {
   country    String?   @db.VarChar(100)
   city       String?   @db.VarChar(100)
   created_at DateTime? @default(now()) @db.Timestamp(0)
+
+  accounts          accounts[]
+  business_users    business_users[]
+  categories        categories[]
+  contacts          contacts[]
+  fiscal_years      fiscal_years[]
+  journal_entries   journal_entries[]
+  notifications     notifications[]
+  payables          payables[]
+  products          products[]
+  purchases         purchases[]
+  receivables       receivables[]
+  reports           reports[]
+  sales             sales[]
+  stock_movements   stock_movements[]
+  warehouses        warehouses[]
 }
 
 model categories {
   id          Int     @id @default(autoincrement())
   business_id String? @db.Char(36)
   name        String  @db.VarChar(100)
+
+  business    businesses? @relation(fields: [business_id], references: [id])
+  products    products[]
 
   @@index([business_id], map: "idx_categories_business_id")
 }
@@ -59,6 +86,12 @@ model contacts {
   phone       String?       @db.VarChar(50)
   email       String?       @db.VarChar(150)
 
+  business    businesses    @relation(fields: [business_id], references: [id])
+  payables    payables[]    @relation("contact_payables")
+  purchases   purchases[]   @relation("contact_purchases")
+  receivables receivables[] @relation("contact_receivables")
+  sales       sales[]       @relation("contact_sales")
+
   @@index([business_id], map: "idx_contacts_business_id")
 }
 
@@ -69,6 +102,8 @@ model fiscal_years {
   start_date  DateTime?            @db.Date
   end_date    DateTime?            @db.Date
   status      fiscal_years_status? @default(OPEN)
+
+  business    businesses          @relation(fields: [business_id], references: [id])
 
   @@index([business_id], map: "idx_fiscal_years_business_id")
 }
@@ -85,6 +120,10 @@ model journal_entries {
   reference_id   String?                         @db.Char(36)
   fiscal_year_id String?                         @db.Char(36)
 
+  business       businesses                     @relation(fields: [business_id], references: [id])
+  creator        users?                         @relation("journal_entry_creator", fields: [created_by], references: [id])
+  lines          journal_lines[]                @relation("journal_entry_lines")
+
   @@index([business_id], map: "idx_journal_business")
   @@index([entry_date], map: "idx_journal_date")
   @@index([reference_type, reference_id], map: "idx_journal_reference")
@@ -97,6 +136,9 @@ model journal_lines {
   account_id String?  @db.Char(36)
   debit      Decimal? @default(0.00) @db.Decimal(12, 2)
   credit     Decimal? @default(0.00) @db.Decimal(12, 2)
+
+  journal    journal_entries @relation("journal_entry_lines", fields: [journal_id], references: [id], onDelete: Cascade)
+  account    accounts?       @relation("journal_line_account", fields: [account_id], references: [id])
 
   @@index([account_id], map: "idx_journal_lines_account")
   @@index([journal_id], map: "idx_journal_lines_journal")
@@ -118,6 +160,9 @@ model notifications {
   type        notifications_type?
   created_at  DateTime?           @default(now()) @db.Timestamp(0)
 
+  business    businesses          @relation(fields: [business_id], references: [id])
+  user        users?              @relation("user_notifications", fields: [user_id], references: [id])
+
   @@index([business_id], map: "idx_notifications_business_id")
 }
 
@@ -129,6 +174,9 @@ model payables {
   amount       Decimal?         @db.Decimal(12, 2)
   due_date     DateTime?        @db.Date
   status       payables_status?
+
+  business    businesses?     @relation(fields: [business_id], references: [id])
+  supplier    contacts?        @relation("contact_payables", fields: [supplier_id], references: [id])
 
   @@index([business_id], map: "idx_payables_business")
 }
@@ -145,6 +193,12 @@ model products {
   created_at    DateTime? @default(now()) @db.Timestamp(0)
   category_id   Int?
 
+  business    businesses   @relation(fields: [business_id], references: [id])
+  category    categories?  @relation(fields: [category_id], references: [id])
+  purchase_items purchase_items[] @relation("product_purchase_items")
+  sale_items     sale_items[]     @relation("product_sale_items")
+  stock_movements stock_movements[] @relation("product_stock_movements")
+
   @@index([business_id], map: "idx_products_business")
   @@index([category_id], map: "idx_products_category")
 }
@@ -158,6 +212,7 @@ model purchase_items {
   total       Decimal @db.Decimal(12, 2)
 
   purchase purchases @relation(fields: [purchase_id], references: [id], onDelete: Cascade)
+  product  products? @relation("product_purchase_items", fields: [product_id], references: [id])
 
   @@index([purchase_id], map: "idx_purchase_items_purchase")
 }
@@ -173,6 +228,9 @@ model purchases {
 
   items purchase_items[]
 
+  business    businesses?     @relation(fields: [business_id], references: [id])
+  supplier    contacts?       @relation("contact_purchases", fields: [supplier_id], references: [id])
+
   @@index([business_id], map: "idx_purchases_business")
 }
 
@@ -184,6 +242,9 @@ model receivables {
   amount       Decimal?            @db.Decimal(12, 2)
   due_date     DateTime?           @db.Date
   status       receivables_status?
+
+  business    businesses?     @relation(fields: [business_id], references: [id])
+  customer    contacts?       @relation("contact_receivables", fields: [customer_id], references: [id])
 
   @@index([business_id], map: "idx_receivables_business")
 }
@@ -201,6 +262,8 @@ model reports {
   format       String?       @default("JSON") @db.VarChar(20)
   generated_at DateTime?     @default(now()) @db.Timestamp(0)
 
+  business     businesses    @relation(fields: [business_id], references: [id])
+
   @@index([business_id], map: "idx_reports_business_id")
 }
 
@@ -213,6 +276,7 @@ model sale_items {
   total      Decimal @db.Decimal(12, 2)
 
   sale sales @relation(fields: [sale_id], references: [id], onDelete: Cascade)
+  product products? @relation("product_sale_items", fields: [product_id], references: [id])
 
   @@index([sale_id], map: "idx_sale_items_sale")
 }
@@ -227,6 +291,9 @@ model sales {
   status      sales_status? @default(PENDING)
 
   items sale_items[]
+
+  business    businesses?     @relation(fields: [business_id], references: [id])
+  customer    contacts?       @relation("contact_sales", fields: [customer_id], references: [id])
 
   @@index([business_id], map: "idx_sales_business")
 }
@@ -243,6 +310,10 @@ model stock_movements {
   unit_cost      Decimal?                        @db.Decimal(12, 2)
   movement_date  DateTime?                       @db.Date
 
+  business      businesses                      @relation(fields: [business_id], references: [id])
+  product       products?                       @relation("product_stock_movements", fields: [product_id], references: [id])
+  warehouse     warehouses?                     @relation("warehouse_stock_movements", fields: [warehouse_id], references: [id])
+
   @@index([business_id], map: "idx_stock_business")
   @@index([product_id], map: "idx_stock_product")
 }
@@ -254,6 +325,10 @@ model users {
   email      String    @unique(map: "email") @db.VarChar(150)
   password   String    @db.VarChar(255)
   created_at DateTime? @default(now()) @db.Timestamp(0)
+
+  business_users  business_users[] @relation("user_business_memberships")
+  notifications   notifications[] @relation("user_notifications")
+  journal_entries journal_entries[] @relation("journal_entry_creator")
 }
 
 model warehouses {
@@ -261,6 +336,9 @@ model warehouses {
   business_id String  @db.Char(36)
   name        String  @db.VarChar(100)
   location    String? @db.VarChar(255)
+
+  business    businesses @relation(fields: [business_id], references: [id])
+  stock_movements stock_movements[] @relation("warehouse_stock_movements")
 
   @@index([business_id], map: "business_id")
 }

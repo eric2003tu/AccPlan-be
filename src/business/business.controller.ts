@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/roles.decorator';
 import { BusinessService } from './business.service';
@@ -36,8 +36,40 @@ export class BusinessController {
     isArray: true,
     type: BusinessDto,
   })
-  findAll(@Query('skip') skip = 0, @Query('take') take = 10) {
-    return this.businessService.findAll(+skip, +take);
+  findAll(@Query('skip') skip = 0, @Query('take') take = 10, @Req() req: { user: { id: string } }) {
+    return this.businessService.findAll(+skip, +take, req.user.id);
+  }
+
+  @Get('owned/my-business')
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Get my owned business', description: 'Owner only - returns the business they own' })
+  @ApiResponse({
+    status: 200,
+    description: 'Owned business details',
+    type: BusinessDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No owned business found',
+  })
+  getOwnedBusiness(@Req() req: { user: { id: string } }) {
+    return this.businessService.getOwnedBusiness(req.user.id);
+  }
+
+  @Get('managed/my-business')
+  @Roles('MANAGER')
+  @ApiOperation({ summary: 'Get my managed business', description: 'Manager only - returns the business they manage' })
+  @ApiResponse({
+    status: 200,
+    description: 'Managed business details',
+    type: BusinessDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'No managed business found',
+  })
+  getManagedBusiness(@Req() req: { user: { id: string } }) {
+    return this.businessService.getManagedBusiness(req.user.id);
   }
 
   @Get(':id')

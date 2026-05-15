@@ -40,6 +40,7 @@ async function bootstrap() {
         'http://localhost:3018',
         'http://localhost:3019',
         'http://localhost:3020',
+        'https://accounting-dusky-six.vercel.app',
       ];
       
       if (!origin || allowedOrigins.includes(origin) || portRegex.test(origin)) {

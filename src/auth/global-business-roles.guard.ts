@@ -42,23 +42,34 @@ export class GlobalBusinessRolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // If roles are defined, business context is mandatory
+    // If roles are defined, check user authorization
     if (requiredRoles && requiredRoles.length > 0) {
-      if (!businessId) {
-        throw new ForbiddenException('Business context required for this operation');
-      }
+      // If business context is provided, validate role for that specific business
+      if (businessId) {
+        const bu = await this.prisma.business_users.findFirst({
+          where: { business_id: businessId, user_id: user.id },
+        });
 
-      const bu = await this.prisma.business_users.findFirst({
-        where: { business_id: businessId, user_id: user.id },
-      });
+        if (!bu) {
+          throw new ForbiddenException('User has no role for this business');
+        }
 
-      if (!bu) {
-        throw new ForbiddenException('User has no role for this business');
-      }
+        // Check if user's role matches required roles
+        if (!requiredRoles.includes(bu.role)) {
+          throw new ForbiddenException('Insufficient role for this operation');
+        }
+      } else {
+        // No business context provided; check if user has ANY role in ANY business
+        const userHasAnyRole = await this.prisma.business_users.findFirst({
+          where: { user_id: user.id },
+        });
 
-      // Check if user's role matches required roles
-      if (!requiredRoles.includes(bu.role)) {
-        throw new ForbiddenException('Insufficient role for this operation');
+        if (!userHasAnyRole) {
+          throw new ForbiddenException('User has no business roles');
+        }
+
+        // User has at least one role; allow them through
+        // The specific endpoint (controller/service) will handle filtering based on their roles
       }
     }
 

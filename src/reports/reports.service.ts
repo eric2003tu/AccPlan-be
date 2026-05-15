@@ -59,6 +59,16 @@ type GeneratedReport = {
   data: unknown;
 };
 
+function formatMoney(value: number) {
+  const isWholeNumber = Number.isInteger(value);
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: isWholeNumber ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 @Injectable()
 export class ReportsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ReportsService.name);
@@ -397,35 +407,137 @@ export class ReportsService implements OnModuleInit, OnModuleDestroy {
       total_equity: balanceSheetEquity.reduce((sum, row) => sum + row.amount, 0) + netIncome,
     };
 
+    const currentAssetAccounts = assetAccounts.filter((account) => ['1000', '1100', '1200'].includes(account.code ?? ''));
+    const fixedAssetAccounts = assetAccounts.filter((account) => !['1000', '1100', '1200'].includes(account.code ?? ''));
+    const currentLiabilityAccounts = liabilityAccounts.filter((account) => ['2000', '2100'].includes(account.code ?? ''));
+    const longTermLiabilityAccounts = liabilityAccounts.filter((account) => !['2000', '2100'].includes(account.code ?? ''));
+    const capitalAccounts = equityAccounts;
+
+    const currentAssets = currentAssetAccounts.map((account) => {
+      const totals = totalsMap.get(account.id) ?? { debit: 0, credit: 0 };
+
+      return {
+        label: account.name,
+        amount: formatMoney(totals.debit - totals.credit),
+        note: account.code ? `Account ${account.code}` : undefined,
+      };
+    });
+
+    const fixedAssets = fixedAssetAccounts.map((account) => {
+      const totals = totalsMap.get(account.id) ?? { debit: 0, credit: 0 };
+
+      return {
+        label: account.name,
+        amount: formatMoney(totals.debit - totals.credit),
+        note: account.code ? `Account ${account.code}` : undefined,
+      };
+    });
+
+    const currentLiabilities = currentLiabilityAccounts.map((account) => {
+      const totals = totalsMap.get(account.id) ?? { debit: 0, credit: 0 };
+
+      return {
+        label: account.name,
+        amount: formatMoney(totals.credit - totals.debit),
+        note: account.code ? `Account ${account.code}` : undefined,
+      };
+    });
+
+    const longTermLiabilities = longTermLiabilityAccounts.map((account) => {
+      const totals = totalsMap.get(account.id) ?? { debit: 0, credit: 0 };
+
+      return {
+        label: account.name,
+        amount: formatMoney(totals.credit - totals.debit),
+        note: account.code ? `Account ${account.code}` : undefined,
+      };
+    });
+
+    const capital = capitalAccounts.map((account) => {
+      const totals = totalsMap.get(account.id) ?? { debit: 0, credit: 0 };
+
+      return {
+        label: account.name,
+        amount: formatMoney(totals.credit - totals.debit),
+        note: account.code ? `Account ${account.code}` : undefined,
+      };
+    });
+
+    const currentAssetsTotal = currentAssets.reduce((sum, line) => sum + this.parseCurrency(line.amount), 0);
+    const fixedAssetsTotal = fixedAssets.reduce((sum, line) => sum + this.parseCurrency(line.amount), 0);
+    const currentLiabilitiesTotal = currentLiabilities.reduce((sum, line) => sum + this.parseCurrency(line.amount), 0);
+    const longTermLiabilitiesTotal = longTermLiabilities.reduce((sum, line) => sum + this.parseCurrency(line.amount), 0);
+    const capitalTotal = capital.reduce((sum, line) => sum + this.parseCurrency(line.amount), 0);
+    const totalAssets = currentAssetsTotal + fixedAssetsTotal;
+    const totalLiabilities = currentLiabilitiesTotal + longTermLiabilitiesTotal;
+    const retainedEarnings = totalAssets - totalLiabilities - capitalTotal;
+    const totalEquity = capitalTotal + retainedEarnings;
+
+    const costOfSalesRows = expenseRows.filter((row) => row.code === '5000');
+    const operatingExpenseRows = expenseRows.filter((row) => row.code !== '5000');
+    const costOfSalesTotal = costOfSalesRows.reduce((sum, row) => sum + row.amount, 0);
+    const operatingExpensesTotal = operatingExpenseRows.reduce((sum, row) => sum + row.amount, 0);
+
+    const cashbookReceiptLines = cashbookLines.filter((line) => this.toAmount(line.debit) > 0).map((line) => ({
+      date: line.journal_date,
+      reference: (line.reference as string | null | undefined) ?? '',
+      particulars: (line.description as string | null | undefined) ?? (line.account_name as string | null | undefined) ?? 'Cash receipt',
+      amount: formatMoney(this.toAmount(line.debit)),
+      balance: formatMoney(Math.max(this.toAmount(line.debit), 0)),
+    }));
+
+    const cashbookPaymentLines = cashbookLines.filter((line) => this.toAmount(line.credit) > 0).map((line) => ({
+      date: line.journal_date,
+      reference: (line.reference as string | null | undefined) ?? '',
+      particulars: (line.description as string | null | undefined) ?? (line.account_name as string | null | undefined) ?? 'Cash payment',
+      amount: formatMoney(this.toAmount(line.credit)),
+      balance: formatMoney(-this.toAmount(line.credit)),
+    }));
+
+    const cashbookReceiptTotal = cashbookReceiptLines.reduce((sum, line) => sum + this.parseCurrency(line.amount), 0);
+    const cashbookPaymentTotal = cashbookPaymentLines.reduce((sum, line) => sum + this.parseCurrency(line.amount), 0);
+    const cashbookClosing = cashbookReceiptTotal - cashbookPaymentTotal;
+
+    const ledgerRows = ledger.flatMap((account) =>
+      account.lines.map((line) => ({
+        date: line.journal_date,
+        reference: line.reference ?? '',
+        description: line.description ?? account.name,
+        debit: line.debit > 0 ? formatMoney(line.debit) : '',
+        credit: line.credit > 0 ? formatMoney(line.credit) : '',
+        balance: formatMoney(line.running_balance),
+      })),
+    );
+
+    const ledgerDebitTotal = ledgerRows.reduce((sum, row) => sum + this.parseCurrency(row.debit || '0'), 0);
+    const ledgerCreditTotal = ledgerRows.reduce((sum, row) => sum + this.parseCurrency(row.credit || '0'), 0);
+
     const reportBlueprints: GeneratedReport[] = [
       {
-        type: 'CASHBOOK',
-        name: 'Daily Cashbook',
+        type: 'BALANCE_SHEET',
+        name: 'Daily Balance Sheet',
         data: {
           business_id: business.id,
           business_name: business.name,
           as_of: range.end.toISOString(),
-          entries: cashbookLines,
-        },
-      },
-      {
-        type: 'TRIAL_BALANCE',
-        name: 'Daily Trial Balance',
-        data: {
-          business_id: business.id,
-          business_name: business.name,
-          as_of: range.end.toISOString(),
-          accounts: trialBalance,
-        },
-      },
-      {
-        type: 'LEDGER',
-        name: 'Daily Ledger',
-        data: {
-          business_id: business.id,
-          business_name: business.name,
-          as_of: range.end.toISOString(),
-          accounts: ledger,
+          currentAssets,
+          fixedAssets,
+          currentLiabilities,
+          longTermLiabilities,
+          capital,
+          totals: {
+            currentAssets: formatMoney(currentAssetsTotal),
+            fixedAssets: formatMoney(fixedAssetsTotal),
+            totalAssets: formatMoney(totalAssets),
+            currentLiabilities: formatMoney(currentLiabilitiesTotal),
+            longTermLiabilities: formatMoney(longTermLiabilitiesTotal),
+            totalLiabilities: formatMoney(totalLiabilities),
+            capital: formatMoney(capitalTotal),
+            retainedEarnings: formatMoney(retainedEarnings),
+            totalEquity: formatMoney(totalEquity),
+            liabilitiesAndEquity: formatMoney(totalLiabilities + totalEquity),
+            balanceCheck: 'Balanced',
+          },
         },
       },
       {
@@ -436,21 +548,93 @@ export class ReportsService implements OnModuleInit, OnModuleDestroy {
           business_name: business.name,
           period_start: range.start.toISOString(),
           period_end: range.end.toISOString(),
-          income: incomeRows,
-          expenses: expenseRows,
-          total_income: totalIncome,
-          total_expenses: totalExpenses,
-          net_income: netIncome,
+          revenue: incomeRows.map((row) => ({
+            label: row.name,
+            amount: formatMoney(row.amount),
+            note: row.code ? `Account ${row.code}` : undefined,
+          })),
+          costOfSales: costOfSalesRows.map((row) => ({
+            label: row.name,
+            amount: formatMoney(row.amount),
+            note: row.code ? `Account ${row.code}` : undefined,
+          })),
+          operatingExpenses: operatingExpenseRows.map((row) => ({
+            label: row.name,
+            amount: formatMoney(row.amount),
+            note: row.code ? `Account ${row.code}` : undefined,
+          })),
+          totals: {
+            revenue: formatMoney(totalIncome),
+            costOfSales: formatMoney(costOfSalesTotal),
+            grossProfit: formatMoney(totalIncome - costOfSalesTotal),
+            operatingExpenses: formatMoney(operatingExpensesTotal),
+            netProfit: formatMoney(totalIncome - costOfSalesTotal - operatingExpensesTotal),
+          },
         },
       },
       {
-        type: 'BALANCE_SHEET',
-        name: 'Daily Balance Sheet',
+        type: 'TRIAL_BALANCE',
+        name: 'Daily Trial Balance',
         data: {
           business_id: business.id,
           business_name: business.name,
           as_of: range.end.toISOString(),
-          balance_sheet: balanceSheet,
+          accounts: trialBalance.map((line) => ({
+            account: line.name,
+            debit: line.debit > 0 ? formatMoney(line.debit) : undefined,
+            credit: line.credit > 0 ? formatMoney(line.credit) : undefined,
+            note: line.code ? `Account ${line.code}` : undefined,
+          })),
+          totals: {
+            debit: formatMoney(trialBalance.reduce((sum, line) => sum + line.debit, 0)),
+            credit: formatMoney(trialBalance.reduce((sum, line) => sum + line.credit, 0)),
+            difference: formatMoney(Math.abs(trialBalance.reduce((sum, line) => sum + line.debit, 0) - trialBalance.reduce((sum, line) => sum + line.credit, 0))),
+          },
+        },
+      },
+      {
+        type: 'LEDGER',
+        name: 'Daily Ledger',
+        data: {
+          business_id: business.id,
+          business_name: business.name,
+          as_of: range.end.toISOString(),
+          rows: ledgerRows,
+          sections: [
+            {
+              title: 'Ledger Summary',
+              description: 'Flat journal-style lines for the current period.',
+              items: [
+                { label: 'Accounts with activity', value: String(ledger.length) },
+                { label: 'Rows', value: String(ledgerRows.length) },
+              ],
+            },
+            {
+              title: 'Control Totals',
+              description: 'Aggregated debit and credit movement totals.',
+              items: [
+                { label: 'Debit total', value: formatMoney(ledgerDebitTotal) },
+                { label: 'Credit total', value: formatMoney(ledgerCreditTotal) },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        type: 'CASHBOOK',
+        name: 'Daily Cashbook',
+        data: {
+          business_id: business.id,
+          business_name: business.name,
+          as_of: range.end.toISOString(),
+          openingBalance: formatMoney(0),
+          receipts: cashbookReceiptLines,
+          payments: cashbookPaymentLines,
+          totals: {
+            receipts: formatMoney(cashbookReceiptTotal),
+            payments: formatMoney(cashbookPaymentTotal),
+            closing: formatMoney(cashbookClosing),
+          },
         },
       },
     ];
@@ -546,6 +730,13 @@ export class ReportsService implements OnModuleInit, OnModuleDestroy {
     }
 
     const amount = Number(value);
+    return Number.isFinite(amount) ? amount : 0;
+  }
+
+  private parseCurrency(value: string) {
+    const normalized = value.replace(/[^0-9.-]/g, '');
+    const amount = Number(normalized);
+
     return Number.isFinite(amount) ? amount : 0;
   }
 
