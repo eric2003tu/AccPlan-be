@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@ne
 import { Roles } from '../auth/roles.decorator';
 import { BusinessUsersService } from './business-users.service';
 import { CreateBusinessUserDto } from './dto/create-business-user.dto';
-import { UpdateBusinessUserDto } from './dto/update-business-user.dto';
+import { UpdateBusinessUserRoleDto } from './dto/update-business-user-role.dto';
 import { DeleteBusinessUserDto } from './dto/delete-business-user.dto';
 import { BusinessUserDto } from './dto/business-user.dto';
 
@@ -70,11 +70,10 @@ export class BusinessUsersController {
     description: 'Business user not found',
   })
   async findOne(@Param('id') id: string, @Req() req: { user: { id: string; system_role?: string } }) {
-    const businessUser = await this.businessUsersService.findOne(id);
-
-    if (req.user.system_role !== 'ADMIN') {
-      await this.businessUsersService.ensureUserOwnsBusiness(req.user.id, businessUser.business_id);
-    }
+    const businessUser =
+      req.user.system_role === 'ADMIN'
+        ? await this.businessUsersService.findOne(id)
+        : await this.businessUsersService.findManagedBusinessUserForOwner(req.user.id, id);
 
     return businessUser;
   }
@@ -89,16 +88,19 @@ export class BusinessUsersController {
   })
   async update(
     @Param('id') id: string,
-    @Body() updateBusinessUserDto: UpdateBusinessUserDto,
+    @Body() updateBusinessUserDto: UpdateBusinessUserRoleDto,
     @Req() req: { user: { id: string; system_role?: string } },
   ) {
-    const businessUser = await this.businessUsersService.findOne(id);
-
     if (req.user.system_role !== 'ADMIN') {
-      await this.businessUsersService.ensureUserOwnsBusiness(req.user.id, businessUser.business_id);
+      await this.businessUsersService.ensureUserOwnsBusiness(req.user.id, updateBusinessUserDto.business_id);
     }
 
-    return this.businessUsersService.update(id, updateBusinessUserDto);
+    const businessUser =
+      req.user.system_role === 'ADMIN'
+        ? await this.businessUsersService.findOne(id)
+        : await this.businessUsersService.findManagedBusinessUserForOwner(updateBusinessUserDto.business_id, id);
+
+    return this.businessUsersService.updateRole(businessUser.id, updateBusinessUserDto.role);
   }
 
   @Delete(':id')
@@ -112,12 +114,11 @@ export class BusinessUsersController {
     @Param() deleteBusinessUserDto: DeleteBusinessUserDto,
     @Req() req: { user: { id: string; system_role?: string } },
   ) {
-    const businessUser = await this.businessUsersService.findOne(deleteBusinessUserDto.id);
+    const businessUser =
+      req.user.system_role === 'ADMIN'
+        ? await this.businessUsersService.findOne(deleteBusinessUserDto.id)
+        : await this.businessUsersService.findManagedBusinessUserForOwner(req.user.id, deleteBusinessUserDto.id);
 
-    if (req.user.system_role !== 'ADMIN') {
-      await this.businessUsersService.ensureUserOwnsBusiness(req.user.id, businessUser.business_id);
-    }
-
-    return this.businessUsersService.remove(deleteBusinessUserDto.id);
+    return this.businessUsersService.remove(businessUser.id);
   }
 }

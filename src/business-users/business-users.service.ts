@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { business_users_role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBusinessUserDto } from './dto/create-business-user.dto';
-import { UpdateBusinessUserDto } from './dto/update-business-user.dto';
 import { v4 as uuid } from 'uuid';
 
 @Injectable()
@@ -22,11 +22,29 @@ export class BusinessUsersService {
   }
 
   async ensureUserOwnsBusiness(userId: string, businessId: string) {
-    const ownedBusinessId = await this.getOwnedBusinessId(userId);
+    const ownershipRecord = await this.prisma.business_users.findFirst({
+      where: { user_id: userId, business_id: businessId, role: 'OWNER' },
+      select: { business_id: true },
+    });
 
-    if (ownedBusinessId !== businessId) {
+    if (!ownershipRecord) {
       throw new ForbiddenException('You can only manage business users for your own business');
     }
+  }
+
+  async findManagedBusinessUserForOwner(businessId: string, businessUserIdentifier: string) {
+    const businessUser = await this.prisma.business_users.findFirst({
+      where: {
+        business_id: businessId,
+        OR: [{ id: businessUserIdentifier }, { user_id: businessUserIdentifier }],
+      },
+    });
+
+    if (!businessUser) {
+      throw new NotFoundException('Business user not found');
+    }
+
+    return businessUser;
   }
 
   async create(createBusinessUserDto: CreateBusinessUserDto) {
@@ -71,16 +89,20 @@ export class BusinessUsersService {
     return businessUser;
   }
 
-  async update(id: string, updateBusinessUserDto: UpdateBusinessUserDto) {
+  async updateRole(id: string, role: business_users_role) {
     const businessUser = await this.prisma.business_users.findUnique({ where: { id } });
 
     if (!businessUser) {
       throw new NotFoundException('Business user not found');
     }
 
+    if (!role) {
+      throw new BadRequestException('Role is required');
+    }
+
     return this.prisma.business_users.update({
       where: { id },
-      data: updateBusinessUserDto,
+      data: { role },
     });
   }
 
