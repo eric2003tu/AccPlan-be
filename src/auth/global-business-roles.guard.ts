@@ -27,6 +27,10 @@ export class GlobalBusinessRolesGuard implements CanActivate {
       return true; // Let JWT guard handle auth errors
     }
 
+    if (user.system_role === 'ADMIN') {
+      return true;
+    }
+
     // Extract business context from multiple sources
     const businessId =
       request.params?.businessId ||
@@ -44,10 +48,41 @@ export class GlobalBusinessRolesGuard implements CanActivate {
 
     // If roles are defined, check user authorization
     if (requiredRoles && requiredRoles.length > 0) {
+      const controllerName = context.getClass().name;
+      const isBusinessUsersController = controllerName === 'BusinessUsersController';
+
+      let resolvedBusinessId = businessId;
+
+      if (!resolvedBusinessId && isBusinessUsersController) {
+        if (request.params?.id) {
+          const targetBusinessUser = await this.prisma.business_users.findUnique({
+            where: { id: request.params.id },
+            select: { business_id: true },
+          });
+
+          if (targetBusinessUser) {
+            resolvedBusinessId = targetBusinessUser.business_id;
+          }
+        }
+
+        if (!resolvedBusinessId && request.method === 'GET') {
+          const ownedBusiness = await this.prisma.business_users.findFirst({
+            where: { user_id: user.id, role: 'OWNER' },
+            select: { business_id: true },
+          });
+
+          if (ownedBusiness) {
+            resolvedBusinessId = ownedBusiness.business_id;
+          } else {
+            throw new ForbiddenException('User has no owned business');
+          }
+        }
+      }
+
       // If business context is provided, validate role for that specific business
-      if (businessId) {
+      if (resolvedBusinessId) {
         const bu = await this.prisma.business_users.findFirst({
-          where: { business_id: businessId, user_id: user.id },
+          where: { business_id: resolvedBusinessId, user_id: user.id },
         });
 
         if (!bu) {

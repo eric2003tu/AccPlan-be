@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/roles.decorator';
-import { SystemRoles } from '../auth/system-roles.decorator';
 import { BusinessUsersService } from './business-users.service';
 import { CreateBusinessUserDto } from './dto/create-business-user.dto';
 import { UpdateBusinessUserDto } from './dto/update-business-user.dto';
@@ -15,20 +14,27 @@ export class BusinessUsersController {
   constructor(private readonly businessUsersService: BusinessUsersService) {}
 
   @Post()
-  @SystemRoles('ADMIN')
-  @ApiOperation({ summary: 'Assign user to business', description: 'System Admin only - for managing user-business assignments' })
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Assign user to business', description: 'Business owner only - limited to their own business' })
   @ApiResponse({
     status: 201,
     description: 'User assigned to business successfully',
     type: BusinessUserDto,
   })
-  create(@Body() createBusinessUserDto: CreateBusinessUserDto) {
+  async create(
+    @Body() createBusinessUserDto: CreateBusinessUserDto,
+    @Req() req: { user: { id: string; system_role?: string } },
+  ) {
+    if (req.user.system_role !== 'ADMIN') {
+      await this.businessUsersService.ensureUserOwnsBusiness(req.user.id, createBusinessUserDto.business_id);
+    }
+
     return this.businessUsersService.create(createBusinessUserDto);
   }
 
   @Get()
-  @SystemRoles('ADMIN')
-  @ApiOperation({ summary: 'Get all business users', description: 'System Admin only' })
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Get business users', description: 'Business owner only - limited to their own business' })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
   @ApiResponse({
@@ -37,11 +43,22 @@ export class BusinessUsersController {
     isArray: true,
     type: BusinessUserDto,
   })
-  findAll(@Query('skip') skip = 0, @Query('take') take = 10) {
-    return this.businessUsersService.findAll(+skip, +take);
+  async findAll(
+    @Query('skip') skip = 0,
+    @Query('take') take = 10,
+    @Req() req: { user: { id: string; system_role?: string } },
+  ) {
+    if (req.user.system_role === 'ADMIN') {
+      return this.businessUsersService.findAll(+skip, +take);
+    }
+
+    const ownedBusinessId = await this.businessUsersService.getOwnedBusinessId(req.user.id);
+
+    return this.businessUsersService.findAll(+skip, +take, ownedBusinessId);
   }
 
   @Get(':id')
+  @Roles('OWNER')
   @ApiOperation({ summary: 'Get a business user by ID' })
   @ApiResponse({
     status: 200,
@@ -52,30 +69,55 @@ export class BusinessUsersController {
     status: 404,
     description: 'Business user not found',
   })
-  findOne(@Param('id') id: string) {
-    return this.businessUsersService.findOne(id);
+  async findOne(@Param('id') id: string, @Req() req: { user: { id: string; system_role?: string } }) {
+    const businessUser = await this.businessUsersService.findOne(id);
+
+    if (req.user.system_role !== 'ADMIN') {
+      await this.businessUsersService.ensureUserOwnsBusiness(req.user.id, businessUser.business_id);
+    }
+
+    return businessUser;
   }
 
   @Put(':id')
-  @SystemRoles('ADMIN')
-  @ApiOperation({ summary: 'Update business user role', description: 'System Admin only' })
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Update business user role', description: 'Business owner only - limited to their own business' })
   @ApiResponse({
     status: 200,
     description: 'Business user updated successfully',
     type: BusinessUserDto,
   })
-  update(@Param('id') id: string, @Body() updateBusinessUserDto: UpdateBusinessUserDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateBusinessUserDto: UpdateBusinessUserDto,
+    @Req() req: { user: { id: string; system_role?: string } },
+  ) {
+    const businessUser = await this.businessUsersService.findOne(id);
+
+    if (req.user.system_role !== 'ADMIN') {
+      await this.businessUsersService.ensureUserOwnsBusiness(req.user.id, businessUser.business_id);
+    }
+
     return this.businessUsersService.update(id, updateBusinessUserDto);
   }
 
   @Delete(':id')
-  @SystemRoles('ADMIN')
-  @ApiOperation({ summary: 'Remove user from business', description: 'System Admin only' })
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Remove user from business', description: 'Business owner only - limited to their own business' })
   @ApiResponse({
     status: 200,
     description: 'User removed from business successfully',
   })
-  remove(@Param() deleteBusinessUserDto: DeleteBusinessUserDto) {
+  async remove(
+    @Param() deleteBusinessUserDto: DeleteBusinessUserDto,
+    @Req() req: { user: { id: string; system_role?: string } },
+  ) {
+    const businessUser = await this.businessUsersService.findOne(deleteBusinessUserDto.id);
+
+    if (req.user.system_role !== 'ADMIN') {
+      await this.businessUsersService.ensureUserOwnsBusiness(req.user.id, businessUser.business_id);
+    }
+
     return this.businessUsersService.remove(deleteBusinessUserDto.id);
   }
 }
