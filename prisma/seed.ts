@@ -421,22 +421,32 @@ async function upsertUser(user: SeedUser) {
   const hashedPassword = await bcrypt.hash(user.password, 10);
   const existingUser = await prisma.users.findUnique({ where: { email: user.email } });
 
+  // Determine if this seeded user is listed as an owner or manager for any seeded business
+  const isOwner = seededBusinesses.some((b) => b.ownerEmail === user.email);
+  const isManager = seededBusinesses.some((b) => b.managerEmail === user.email);
+
   if (existingUser) {
+    const intendedRole = user.email === 'admin@accplan.com' ? 'ADMIN' : isOwner ? 'OWNER' : isManager ? 'MANAGER' : existingUser.system_role ?? 'NORMAL';
+
     return prisma.users.update({
       where: { email: user.email },
       data: {
         first_name: user.first_name,
         last_name: user.last_name,
         password: hashedPassword,
+        system_role: intendedRole,
       },
       select: {
         id: true,
         first_name: true,
         last_name: true,
         email: true,
+        system_role: true,
       },
     });
   }
+
+  const roleForCreate = user.email === 'admin@accplan.com' ? 'ADMIN' : isOwner ? 'OWNER' : isManager ? 'MANAGER' : 'NORMAL';
 
   return prisma.users.create({
     data: {
@@ -445,12 +455,14 @@ async function upsertUser(user: SeedUser) {
       last_name: user.last_name,
       email: user.email,
       password: hashedPassword,
+      system_role: roleForCreate,
     },
     select: {
       id: true,
       first_name: true,
       last_name: true,
       email: true,
+      system_role: true,
     },
   });
 }

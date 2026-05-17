@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { RolesGuard } from './roles.guard';
 import { GlobalJwtAuthGuard } from './global-jwt-auth.guard';
 import { GlobalBusinessRolesGuard } from './global-business-roles.guard';
+import { SystemRolesGuard } from './system-roles.guard';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { GlobalBusinessRolesGuard } from './global-business-roles.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RolesGuard, GlobalJwtAuthGuard, GlobalBusinessRolesGuard],
+  providers: [AuthService, JwtStrategy, RolesGuard, GlobalJwtAuthGuard, GlobalBusinessRolesGuard, SystemRolesGuard],
   exports: [AuthService, GlobalJwtAuthGuard, GlobalBusinessRolesGuard],
 })
 export class AuthModule {}

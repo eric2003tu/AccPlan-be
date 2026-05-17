@@ -31,18 +31,21 @@ export class AuthService {
         last_name: registerDto.last_name,
         email: registerDto.email,
         password: hashedPassword,
+        system_role: 'NORMAL',
       },
       select: {
         id: true,
         first_name: true,
         last_name: true,
         email: true,
+        system_role: true,
       },
     });
 
     const access_token = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
+      system_role: user.system_role,
     });
 
     return {
@@ -60,6 +63,7 @@ export class AuthService {
         first_name: true,
         last_name: true,
         email: true,
+        system_role: true,
         password: true,
       },
     });
@@ -76,6 +80,7 @@ export class AuthService {
     const access_token = await this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
+      system_role: user.system_role,
     });
 
     return {
@@ -86,6 +91,7 @@ export class AuthService {
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
+        system_role: user.system_role,
       },
     };
   }

@@ -27,6 +27,7 @@ import { BusinessUsersModule } from './business-users/business-users.module';
 import { AuthModule } from './auth/auth.module';
 import { GlobalJwtAuthGuard } from './auth/global-jwt-auth.guard';
 import { GlobalBusinessRolesGuard } from './auth/global-business-roles.guard';
+import { SystemRolesGuard } from './auth/system-roles.guard';
 
 @Module({
   imports: [
@@ -59,6 +60,10 @@ import { GlobalBusinessRolesGuard } from './auth/global-business-roles.guard';
     {
       provide: APP_GUARD,
       useClass: GlobalJwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: SystemRolesGuard,
     },
     {
       provide: APP_GUARD,

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/roles.decorator';
+import { SystemRoles } from '../auth/system-roles.decorator';
 import { BusinessUsersService } from './business-users.service';
 import { CreateBusinessUserDto } from './dto/create-business-user.dto';
 import { UpdateBusinessUserDto } from './dto/update-business-user.dto';
@@ -14,7 +15,7 @@ export class BusinessUsersController {
   constructor(private readonly businessUsersService: BusinessUsersService) {}
 
   @Post()
-  @Roles('ADMIN')
+  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Assign user to business', description: 'System Admin only - for managing user-business assignments' })
   @ApiResponse({
     status: 201,
@@ -26,7 +27,7 @@ export class BusinessUsersController {
   }
 
   @Get()
-  @Roles('ADMIN')
+  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Get all business users', description: 'System Admin only' })
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
@@ -56,7 +57,7 @@ export class BusinessUsersController {
   }
 
   @Put(':id')
-  @Roles('ADMIN')
+  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Update business user role', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
@@ -68,7 +69,7 @@ export class BusinessUsersController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
+  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Remove user from business', description: 'System Admin only' })
   @ApiResponse({
     status: 200,

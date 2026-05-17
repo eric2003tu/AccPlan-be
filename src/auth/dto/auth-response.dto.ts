@@ -12,6 +12,9 @@ export class AuthUserDto {
 
   @ApiProperty()
   email!: string;
+
+  @ApiProperty({ description: 'System role of the user' })
+  system_role!: string;
 }
 
 export class AuthResponseDto {

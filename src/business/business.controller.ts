@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/roles.decorator';
+import { SystemRoles } from '../auth/system-roles.decorator';
 import { BusinessService } from './business.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
@@ -14,7 +15,7 @@ export class BusinessController {
   constructor(private readonly businessService: BusinessService) {}
 
   @Post()
-  @Roles('ADMIN')
+  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Create a new business', description: 'System Admin only - for creating business entities' })
   @ApiResponse({
     status: 201,
@@ -88,7 +89,7 @@ export class BusinessController {
   }
 
   @Put(':id')
-  @Roles('ADMIN')
+  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Update a business', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
@@ -100,7 +101,7 @@ export class BusinessController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN')
+  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Delete a business', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
