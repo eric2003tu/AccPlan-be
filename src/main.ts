@@ -5,6 +5,37 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const { SwaggerModule, DocumentBuilder } = await import('@nestjs/swagger');
+  const configuredOrigins = [process.env.CORS_ORIGIN, process.env.FRONTEND_ORIGIN, process.env.CORS_ORIGINS]
+    .flatMap((value) => (value ? value.split(',') : []))
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const allowedOrigins = new Set([
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:3004',
+    'http://localhost:3005',
+    'http://localhost:3006',
+    'http://localhost:3007',
+    'http://localhost:3008',
+    'http://localhost:3009',
+    'http://localhost:3010',
+    'http://localhost:3011',
+    'http://localhost:3012',
+    'http://localhost:3013',
+    'http://localhost:3014',
+    'http://localhost:3015',
+    'http://localhost:3016',
+    'http://localhost:3017',
+    'http://localhost:3018',
+    'http://localhost:3019',
+    'http://localhost:3020',
+    'https://accounting-dusky-six.vercel.app',
+    'https://accplan-be.onrender.com',
+    ...configuredOrigins,
+  ]);
+  const renderOriginRegex = /^https:\/\/[a-z0-9-]+\.onrender\.com$/i;
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -17,36 +48,12 @@ async function bootstrap() {
   // Enable CORS for frontend communication (ports 3000-3020)
   app.enableCors({
     origin: function (origin, callback) {
-      const portRegex = /^https?:\/\/localhost:(300[0-9]|301[0-9]|3020)$/;
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:3002',
-        'http://localhost:3003',
-        'http://localhost:3004',
-        'http://localhost:3005',
-        'http://localhost:3006',
-        'http://localhost:3007',
-        'http://localhost:3008',
-        'http://localhost:3009',
-        'http://localhost:3010',
-        'http://localhost:3011',
-        'http://localhost:3012',
-        'http://localhost:3013',
-        'http://localhost:3014',
-        'http://localhost:3015',
-        'http://localhost:3016',
-        'http://localhost:3017',
-        'http://localhost:3018',
-        'http://localhost:3019',
-        'http://localhost:3020',
-        'https://accounting-dusky-six.vercel.app',
-      ];
-      
-      if (!origin || allowedOrigins.includes(origin) || portRegex.test(origin)) {
+      const localhostRegex = /^https?:\/\/localhost:(300[0-9]|301[0-9]|3020)$/;
+
+      if (!origin || allowedOrigins.has(origin) || localhostRegex.test(origin) || renderOriginRegex.test(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(null, false);
       }
     },
     credentials: true,
