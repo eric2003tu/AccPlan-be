@@ -42,13 +42,34 @@ model business_users {
 }
 
 model businesses {
-  id         String    @id @db.Char(36)
-  name       String    @db.VarChar(255)
-  legal_name String?   @db.VarChar(255)
-  tax_id     String?   @db.VarChar(100)
-  country    String?   @db.VarChar(100)
-  city       String?   @db.VarChar(100)
-  created_at DateTime? @default(now()) @db.Timestamp(0)
+  id                 String   @id @db.Char(36)
+  name               String   @db.VarChar(255)
+  legal_name         String?  @db.VarChar(255)
+  trade_name         String?  @db.VarChar(255)
+  vat_number         String?  @db.VarChar(100)
+  tax_id             String?  @db.VarChar(100)
+  registration_no    String?  @db.VarChar(100)
+  industry           String?  @db.VarChar(100)
+  country            String?  @db.VarChar(100)
+  city               String?  @db.VarChar(100)
+  timezone           String?  @db.VarChar(100)
+  subscription       String?  @db.VarChar(50)
+  billing_cycle      String?  @db.VarChar(50)
+  next_billing_date  DateTime? @db.Date
+  status             String?  @db.VarChar(50)
+  monthly_revenue    Decimal? @db.Decimal(12, 2)
+  monthly_expenses   Decimal? @db.Decimal(12, 2)
+  cash_balance       Decimal? @db.Decimal(12, 2)
+  receivables_balance Decimal? @db.Decimal(12, 2)
+  payables_balance    Decimal? @db.Decimal(12, 2)
+  assets             Decimal? @db.Decimal(12, 2)
+  liabilities        Decimal? @db.Decimal(12, 2)
+  net_profit         Decimal? @db.Decimal(12, 2)
+  equity             Decimal? @db.Decimal(12, 2)
+  overdue_invoices   Int?
+  revenue_trend      Json?
+  expense_breakdown  Json?
+  created_at         DateTime? @default(now()) @db.Timestamp(0)
 
   accounts          accounts[]
   business_users    business_users[]

@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/roles.decorator';
-import { SystemRoles } from '../auth/system-roles.decorator';
 import { BusinessService } from './business.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { DeleteBusinessDto } from './dto/delete-business.dto';
 import { BusinessDto } from './dto/business.dto';
+import { OwnedBusinessResponseDto } from './dto/owned-business-response.dto';
 
 @ApiTags('Business')
 @ApiBearerAuth('access-token')
@@ -15,15 +15,14 @@ export class BusinessController {
   constructor(private readonly businessService: BusinessService) {}
 
   @Post()
-  @SystemRoles('ADMIN')
-  @ApiOperation({ summary: 'Create a new business', description: 'System Admin only - for creating business entities' })
+  @ApiOperation({ summary: 'Create a new business', description: 'Authenticated users create a business and become its owner' })
   @ApiResponse({
     status: 201,
     description: 'Business created successfully',
     type: BusinessDto,
   })
-  create(@Body() createBusinessDto: CreateBusinessDto) {
-    return this.businessService.create(createBusinessDto);
+  create(@Body() createBusinessDto: CreateBusinessDto, @Req() req: { user: { id: string } }) {
+    return this.businessService.create(createBusinessDto, req.user.id);
   }
 
   @Get()
@@ -47,7 +46,7 @@ export class BusinessController {
   @ApiResponse({
     status: 200,
     description: 'Owned business details',
-    type: BusinessDto,
+    type: OwnedBusinessResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -89,7 +88,6 @@ export class BusinessController {
   }
 
   @Put(':id')
-  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Update a business', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
@@ -101,7 +99,6 @@ export class BusinessController {
   }
 
   @Delete(':id')
-  @SystemRoles('ADMIN')
   @ApiOperation({ summary: 'Delete a business', description: 'System Admin only' })
   @ApiResponse({
     status: 200,
