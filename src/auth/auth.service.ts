@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -72,16 +72,31 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const valid = await compare(loginDto.password, user.password);
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    let valid = false;
+    try {
+      valid = await compare(loginDto.password, user.password);
+    } catch {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     if (!valid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const access_token = await this.jwtService.signAsync({
-      sub: user.id,
-      email: user.email,
-      system_role: user.system_role,
-    });
+    let access_token: string;
+    try {
+      access_token = await this.jwtService.signAsync({
+        sub: user.id,
+        email: user.email,
+        system_role: user.system_role,
+      });
+    } catch {
+      throw new InternalServerErrorException('JWT configuration error');
+    }
 
     return {
       access_token,
