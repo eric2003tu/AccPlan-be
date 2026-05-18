@@ -26,6 +26,9 @@ class TrendPointDto {
 }
 
 export class OwnerDashboardDto {
+  @ApiProperty({ type: [Object], description: 'Platform-independent stat cards for owner' })
+  stat_cards?: Array<{ title: string; value: number; change?: number | string; note?: string }>;
+
   @ApiProperty()
   total_income: number;
 

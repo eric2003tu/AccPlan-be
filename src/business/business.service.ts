@@ -294,12 +294,18 @@ export class BusinessService {
   }
 
   async getOwnerDashboard(userId: string) {
-    // find businesses where user is OWNER
-    const owned = await this.prisma.business_users.findMany({ where: { user_id: userId, role: 'OWNER' }, select: { business_id: true } });
-    const businessIds = owned.map((o) => o.business_id);
+    // find businesses where user is OWNER, otherwise where user is MANAGER
+    const ownerRecords = await this.prisma.business_users.findMany({ where: { user_id: userId, role: 'OWNER' }, select: { business_id: true } });
+    let businessIds: string[] = ownerRecords.map((o) => o.business_id);
+    let actorIsOwner = businessIds.length > 0;
+
+    if (!actorIsOwner) {
+      const managerRecords = await this.prisma.business_users.findMany({ where: { user_id: userId, role: 'MANAGER' }, select: { business_id: true } });
+      businessIds = managerRecords.map((m) => m.business_id);
+    }
 
     if (businessIds.length === 0) {
-      throw new NotFoundException('No owned businesses found for this user');
+      throw new NotFoundException('No owned or managed businesses found for this user');
     }
 
     // totals
@@ -388,7 +394,16 @@ export class BusinessService {
     const incomeChangePct = calcPct(thisMonthIncome, prevMonthIncome);
     const expenseChangePct = calcPct(thisMonthExpenses, prevMonthExpenses);
 
+    const notePrefix = actorIsOwner ? 'All owned businesses' : 'Managed business(es)';
+    const stat_cards = [
+      { title: 'Total Income', value: totalIncome, change: Number(incomeChangePct.toFixed(2)), note: notePrefix },
+      { title: 'Total Expenses', value: totalExpenses, change: Number(expenseChangePct.toFixed(2)), note: notePrefix },
+      { title: 'Account Balance', value: accountBalance, note: 'Combined cash balance' },
+      { title: 'Pending Invoices', value: pendingInvoices, note: 'Open or overdue invoices' },
+    ];
+
     return {
+      stat_cards,
       // stat cards
       total_income: totalIncome,
       total_income_month: thisMonthIncome,
@@ -410,6 +425,60 @@ export class BusinessService {
       revenue_trend,
       cashflow_trend,
       expense_breakdown,
+    };
+  }
+
+  async getAdminDashboard() {
+    const totalBusinesses = await this.prisma.businesses.count();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+
+    return {
+      months,
+      stat_cards: [
+        {
+          title: 'Managed Accounts',
+          value: 12482,
+          change: '+6%',
+          note: 'Across all tenants',
+        },
+        {
+          title: 'Security Alerts',
+          value: 1,
+          change: '-2%',
+          note: 'Require review',
+        },
+        {
+          title: 'Platform Uptime',
+          value: 99.98,
+          note: 'Last 30 days',
+        },
+        {
+          title: 'Monthly Admin Revenue',
+          value: 84300,
+          change: '+9%',
+          note: 'Subscriptions and addons',
+        },
+        {
+          title: 'Total Businesses',
+          value: totalBusinesses,
+          note: 'Registered businesses',
+        },
+      ],
+      revenue_trend: months.map((label, index) => ({
+        label,
+        value: [5200, 7800, 10200, 12800, 16800, 22000][index],
+      })),
+      cashflow_trend: months.map((label, index) => ({
+        label,
+        value: [2400, 3600, 5100, 6900, 9200, 13800][index],
+      })),
+      expense_breakdown: [
+        { label: 'Salaries', amount: 15000, percent: 53.6 },
+        { label: 'Utilities', amount: 2500, percent: 8.9 },
+        { label: 'Rent', amount: 5000, percent: 17.9 },
+        { label: 'Marketing', amount: 3500, percent: 12.5 },
+        { label: 'Other', amount: 2000, percent: 7.1 },
+      ],
     };
   }
 

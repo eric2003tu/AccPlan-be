@@ -6,6 +6,7 @@ import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { DeleteBusinessDto } from './dto/delete-business.dto';
 import { BusinessDto } from './dto/business.dto';
+import { AdminDashboardDto } from './dto/admin-dashboard.dto';
 import { OwnedBusinessResponseDto } from './dto/owned-business-response.dto';
 import { UserIdDto } from './dto/user-id.dto';
 
@@ -78,11 +79,19 @@ export class BusinessController {
   }
 
   @Get('owned/dashboard')
-  @Roles('OWNER')
+  @Roles('OWNER', 'MANAGER')
   @ApiOperation({ summary: "Owner's portfolio dashboard", description: 'Aggregated portfolio metrics for the authenticated owner' })
   @ApiResponse({ status: 200, description: 'Dashboard data' })
   getOwnerDashboard(@Req() req: { user: { id: string } }) {
     return this.businessService.getOwnerDashboard(req.user.id);
+  }
+
+  @Get('admin/dashboard')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Admin platform dashboard', description: 'Platform overview with users, access, billing, and health metrics' })
+  @ApiResponse({ status: 200, description: 'Admin dashboard data', type: AdminDashboardDto })
+  getAdminDashboard() {
+    return this.businessService.getAdminDashboard();
   }
 
   @Get('managed/my-business')
