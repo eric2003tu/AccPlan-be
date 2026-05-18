@@ -58,8 +58,15 @@ export class BusinessController {
     isArray: true,
     type: BusinessDto,
   })
-  findAll(@Query('skip') skip = 0, @Query('take') take = 10, @Req() req: { user: { id: string } }) {
-    return this.businessService.findAll(+skip, +take, req.user.id);
+  findAll(@Query('skip') skip = 0, @Query('take') take = 10, @Req() req: { user: { id: string; system_role?: string } }) {
+    // Admins should see all businesses; owners/managers see only their businesses
+    const isAdmin = req.user?.system_role === 'ADMIN';
+
+    return this.businessService.findAll(+skip, +take, isAdmin ? undefined : req.user.id).then((businesses) => ({
+      count: Array.isArray(businesses) ? businesses.length : 0,
+      status: 'ok',
+      data: businesses,
+    }));
   }
 
   @Get('owned/my-business')
