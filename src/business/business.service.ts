@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
@@ -22,40 +22,8 @@ export class BusinessService {
       }));
   }
 
-  private resolveFinancials(businessDto: CreateBusinessDto | UpdateBusinessDto) {
-    const financials = businessDto.financials ?? {};
-
-    const monthlyRevenue = businessDto.monthly_revenue ?? financials.monthlyRevenue;
-    const monthlyExpenses = businessDto.monthly_expenses ?? financials.monthlyExpenses;
-    const cashBalance = businessDto.cash_balance ?? financials.cashBalance;
-    const receivables = businessDto.receivables ?? financials.receivables;
-    const payables = businessDto.payables ?? financials.payables;
-    const assets = businessDto.assets ?? financials.assets;
-    const liabilities = businessDto.liabilities ?? financials.liabilities;
-    const overdueInvoices = businessDto.overdue_invoices ?? financials.overdueInvoices;
-
-    const revenueTrend = businessDto.revenue_trend ?? financials.revenueTrend;
-    const expenseBreakdown = businessDto.expense_breakdown ?? financials.expenseBreakdown;
-
-    const parsedRevenue = Number(monthlyRevenue ?? 0);
-    const parsedExpenses = Number(monthlyExpenses ?? 0);
-    const parsedAssets = Number(assets ?? 0);
-    const parsedLiabilities = Number(liabilities ?? 0);
-
-    return {
-      monthly_revenue: monthlyRevenue,
-      monthly_expenses: monthlyExpenses,
-      cash_balance: cashBalance,
-      receivables_balance: receivables,
-      payables_balance: payables,
-      assets,
-      liabilities,
-      net_profit: parsedRevenue - parsedExpenses,
-      equity: parsedAssets - parsedLiabilities,
-      overdue_invoices: overdueInvoices,
-      revenue_trend: this.normalizeTrendRows(revenueTrend),
-      expense_breakdown: this.normalizeTrendRows(expenseBreakdown),
-    };
+  private resolveFinancials(_businessDto: CreateBusinessDto | UpdateBusinessDto) {
+    return {};
   }
 
   private buildBusinessData(businessDto: CreateBusinessDto | UpdateBusinessDto): Record<string, unknown> {
@@ -63,21 +31,79 @@ export class BusinessService {
 
     return {
       ...(businessDto.name !== undefined ? { name: businessDto.name } : {}),
-      ...(businessDto.legal_name !== undefined ? { legal_name: businessDto.legal_name } : {}),
-      ...(businessDto.trade_name !== undefined ? { trade_name: businessDto.trade_name } : {}),
-      ...(businessDto.vat_number !== undefined ? { vat_number: businessDto.vat_number } : {}),
-      ...(businessDto.tax_id !== undefined ? { tax_id: businessDto.tax_id } : {}),
-      ...(businessDto.registration_no !== undefined ? { registration_no: businessDto.registration_no } : {}),
-      ...(businessDto.industry !== undefined ? { industry: businessDto.industry } : {}),
-      ...(businessDto.country !== undefined ? { country: businessDto.country } : {}),
-      ...(businessDto.city !== undefined ? { city: businessDto.city } : {}),
-      ...(businessDto.timezone !== undefined ? { timezone: businessDto.timezone } : {}),
-      ...(businessDto.subscription !== undefined ? { subscription: businessDto.subscription } : {}),
-      ...(businessDto.billing_cycle !== undefined ? { billing_cycle: businessDto.billing_cycle } : {}),
-      ...(businessDto.next_billing_date !== undefined ? { next_billing_date: new Date(businessDto.next_billing_date) } : {}),
-      ...(businessDto.status !== undefined ? { status: businessDto.status } : {}),
+      ...(businessDto.contact_email !== undefined ? { contact_email: businessDto.contact_email } : {}),
+      ...(businessDto.phone !== undefined ? { phone: businessDto.phone } : {}),
+      ...(businessDto.address !== undefined ? { address: businessDto.address } : {}),
+      ...(businessDto.fiscal_year_start !== undefined ? { fiscal_year_start: new Date(businessDto.fiscal_year_start as any) } : {}),
+      ...(businessDto.starting_money !== undefined ? { starting_money: businessDto.starting_money } : {}),
+      ...(businessDto.loans !== undefined ? { loans: businessDto.loans } : {}),
+      ...(businessDto.loans_offered !== undefined ? { loans_offered: businessDto.loans_offered } : {}),
       ...financials,
     };
+  }
+
+  async applyToBeOwner(businessId: string, userId: string) {
+    // Ensure business exists
+    const business = await this.prisma.businesses.findUnique({ where: { id: businessId } });
+    if (!business) throw new NotFoundException('Business not found');
+
+    // Check existing application
+    const existing = await this.prisma.owner_applications.findFirst({ where: { business_id: businessId, user_id: userId } });
+    if (existing && existing.status === 'PENDING') {
+      throw new BadRequestException('Application already pending');
+    }
+
+    return this.prisma.owner_applications.create({
+      data: {
+        id: uuid(),
+        business_id: businessId,
+        user_id: userId,
+        status: 'PENDING',
+      },
+    });
+  }
+
+  async adminApproveOwner(businessId: string, targetUserId: string) {
+    // Only called by admin controller method which enforces admin role
+    const business = await this.prisma.businesses.findUnique({ where: { id: businessId } });
+    if (!business) throw new NotFoundException('Business not found');
+
+    return this.prisma.$transaction(async (prisma) => {
+      // create or update business_users to OWNER
+      await prisma.business_users.upsert({
+        where: { business_id_user_id: { business_id: businessId, user_id: targetUserId } },
+        update: { role: 'OWNER' },
+        create: { id: uuid(), business_id: businessId, user_id: targetUserId, role: 'OWNER' },
+      } as any);
+
+      // update system role on users
+      await prisma.users.update({ where: { id: targetUserId }, data: { system_role: 'OWNER' } as any });
+
+      // mark any application as approved if exists
+      await prisma.owner_applications.updateMany({ where: { business_id: businessId, user_id: targetUserId }, data: { status: 'APPROVED' } });
+
+      return { success: true };
+    });
+  }
+
+  async assignManager(businessId: string, ownerUserId: string, targetUserId: string) {
+    // verify acting user is owner of the business
+    const ownerRecord = await this.prisma.business_users.findFirst({ where: { business_id: businessId, user_id: ownerUserId, role: 'OWNER' } });
+    if (!ownerRecord) throw new ForbiddenException('Only business owner can assign managers');
+
+    return this.prisma.$transaction(async (prisma) => {
+      // upsert business_users for target user as MANAGER
+      await prisma.business_users.upsert({
+        where: { business_id_user_id: { business_id: businessId, user_id: targetUserId } },
+        update: { role: 'MANAGER' },
+        create: { id: uuid(), business_id: businessId, user_id: targetUserId, role: 'MANAGER' },
+      } as any);
+
+      // update system role on users
+      await prisma.users.update({ where: { id: targetUserId }, data: { system_role: 'MANAGER' } as any });
+
+      return { success: true };
+    });
   }
 
   async create(createBusinessDto: CreateBusinessDto, ownerUserId: string) {
@@ -265,6 +291,126 @@ export class BusinessService {
     }
 
     return this.findOne(managementRecord.business_id);
+  }
+
+  async getOwnerDashboard(userId: string) {
+    // find businesses where user is OWNER
+    const owned = await this.prisma.business_users.findMany({ where: { user_id: userId, role: 'OWNER' }, select: { business_id: true } });
+    const businessIds = owned.map((o) => o.business_id);
+
+    if (businessIds.length === 0) {
+      throw new NotFoundException('No owned businesses found for this user');
+    }
+
+    // totals
+    const incomeAgg = await this.prisma.sales.aggregate({ _sum: { total: true }, where: { business_id: { in: businessIds } } });
+    const expenseAgg = await this.prisma.purchases.aggregate({ _sum: { total: true }, where: { business_id: { in: businessIds } } });
+    const cashAgg = await this.prisma.businesses.aggregate({ _sum: { cash_balance: true }, where: { id: { in: businessIds } } });
+    const pendingInvoices = await this.prisma.receivables.count({ where: { business_id: { in: businessIds }, status: { in: ['OPEN','OVERDUE'] } } });
+
+    const totalIncome = Number(incomeAgg._sum.total ?? 0);
+    const totalExpenses = Number(expenseAgg._sum.total ?? 0);
+    const accountBalance = Number(cashAgg._sum.cash_balance ?? 0);
+
+    // recent transactions: combine recent sales, purchases, and journal entries
+    const recentSales = await this.prisma.sales.findMany({ where: { business_id: { in: businessIds } }, orderBy: { sale_date: 'desc' }, take: 5 });
+    const recentPurchases = await this.prisma.purchases.findMany({ where: { business_id: { in: businessIds } }, orderBy: { purchase_date: 'desc' }, take: 5 });
+    const recentJournals = await this.prisma.journal_entries.findMany({ where: { business_id: { in: businessIds } }, orderBy: { created_at: 'desc' }, take: 5 });
+
+    type Tx = { date: Date; type: string; sign: string; amount: number; description?: string };
+    const txs: Tx[] = [];
+    recentSales.forEach((s) => txs.push({ date: s.sale_date ?? new Date(), type: 'Portfolio Revenue', sign: '+', amount: Number(s.total ?? 0), description: `Sale ${s.id.slice(0,8)}` }));
+    recentPurchases.forEach((p) => txs.push({ date: p.purchase_date ?? new Date(), type: 'Portfolio Expenses', sign: '-', amount: Number(p.total ?? 0), description: `Purchase ${p.id.slice(0,8)}` }));
+    recentJournals.forEach((j) => txs.push({ date: j.entry_date ?? (j.created_at as Date) ?? new Date(), type: j.reference_type ?? 'Journal', sign: '+', amount: 0, description: j.description ?? j.reference ?? undefined }));
+
+    // sort and take top 6
+    txs.sort((a, b) => b.date.getTime() - a.date.getTime());
+    const recent_transactions = txs.slice(0, 6).map((t) => ({ type: t.type, sign: t.sign, amount: t.amount, date: t.date.toISOString().slice(0,10), description: t.description }));
+
+    // revenue trend (last 6 months)
+    const dashboardNow = new Date();
+    const months: { label: string; start: Date; end: Date }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(dashboardNow.getFullYear(), dashboardNow.getMonth() - i, 1);
+      const label = d.toLocaleString('en-US', { month: 'short' });
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+      months.push({ label, start, end });
+    }
+
+    const revenue_trend = [] as { label: string; value: number }[];
+    const cashflow_trend = [] as { label: string; value: number }[];
+
+    for (const m of months) {
+      const salesSum = await this.prisma.sales.aggregate({ _sum: { total: true }, where: { business_id: { in: businessIds }, sale_date: { gte: m.start, lte: m.end } } });
+      const purchasesSum = await this.prisma.purchases.aggregate({ _sum: { total: true }, where: { business_id: { in: businessIds }, purchase_date: { gte: m.start, lte: m.end } } });
+      const rev = Number(salesSum._sum.total ?? 0);
+      const exp = Number(purchasesSum._sum.total ?? 0);
+      revenue_trend.push({ label: m.label, value: rev });
+      cashflow_trend.push({ label: m.label, value: rev - exp });
+    }
+
+    // expense breakdown - best-effort buckets (seed creates purchases only)
+    const expense_breakdown = {
+      Salaries: { amount: 0, percent: 0 },
+      Utilities: { amount: 0, percent: 0 },
+      Rent: { amount: 0, percent: 0 },
+      Marketing: { amount: 0, percent: 0 },
+      Other: { amount: 0, percent: 0 },
+    } as Record<string, { amount: number; percent: number }>;
+
+    const gross_income = totalIncome;
+    const net_profit = totalIncome - totalExpenses;
+
+    // month-to-month stats for this month vs previous month
+    const thisMonthStart = new Date(dashboardNow.getFullYear(), dashboardNow.getMonth(), 1);
+    const thisMonthEnd = new Date(dashboardNow.getFullYear(), dashboardNow.getMonth() + 1, 0, 23, 59, 59);
+    const prevMonthStart = new Date(dashboardNow.getFullYear(), dashboardNow.getMonth() - 1, 1);
+    const prevMonthEnd = new Date(dashboardNow.getFullYear(), dashboardNow.getMonth(), 0, 23, 59, 59);
+
+    const thisMonthIncomeAgg = await this.prisma.sales.aggregate({ _sum: { total: true }, where: { business_id: { in: businessIds }, sale_date: { gte: thisMonthStart, lte: thisMonthEnd } } });
+    const prevMonthIncomeAgg = await this.prisma.sales.aggregate({ _sum: { total: true }, where: { business_id: { in: businessIds }, sale_date: { gte: prevMonthStart, lte: prevMonthEnd } } });
+    const thisMonthExpenseAgg = await this.prisma.purchases.aggregate({ _sum: { total: true }, where: { business_id: { in: businessIds }, purchase_date: { gte: thisMonthStart, lte: thisMonthEnd } } });
+    const prevMonthExpenseAgg = await this.prisma.purchases.aggregate({ _sum: { total: true }, where: { business_id: { in: businessIds }, purchase_date: { gte: prevMonthStart, lte: prevMonthEnd } } });
+
+    const thisMonthIncome = Number(thisMonthIncomeAgg._sum.total ?? 0);
+    const prevMonthIncome = Number(prevMonthIncomeAgg._sum.total ?? 0);
+    const thisMonthExpenses = Number(thisMonthExpenseAgg._sum.total ?? 0);
+    const prevMonthExpenses = Number(prevMonthExpenseAgg._sum.total ?? 0);
+
+    const calcPct = (curr: number, prev: number) => {
+      if (prev === 0) {
+        return curr === 0 ? 0 : 100;
+      }
+      return ((curr - prev) / Math.abs(prev)) * 100;
+    };
+
+    const incomeChangePct = calcPct(thisMonthIncome, prevMonthIncome);
+    const expenseChangePct = calcPct(thisMonthExpenses, prevMonthExpenses);
+
+    return {
+      // stat cards
+      total_income: totalIncome,
+      total_income_month: thisMonthIncome,
+      total_income_change_pct: Number(incomeChangePct.toFixed(2)),
+
+      total_expenses: totalExpenses,
+      total_expenses_month: thisMonthExpenses,
+      total_expenses_change_pct: Number(expenseChangePct.toFixed(2)),
+
+      account_balance: accountBalance,
+      pending_invoices: pendingInvoices,
+
+      // recent activity and summaries
+      recent_transactions,
+      gross_income,
+      net_profit,
+
+      // charts
+      revenue_trend,
+      cashflow_trend,
+      expense_breakdown,
+    };
   }
 
   async update(id: string, updateBusinessDto: UpdateBusinessDto) {

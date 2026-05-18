@@ -8,6 +8,27 @@ export class BusinessDto {
   name: string;
 
   @ApiProperty()
+  contact_email?: string;
+
+  @ApiProperty()
+  phone?: string;
+
+  @ApiProperty()
+  address?: string;
+
+  @ApiProperty()
+  fiscal_year_start?: Date;
+
+  @ApiProperty()
+  starting_money?: number;
+
+  @ApiProperty({ required: false, type: [Object] })
+  loans?: unknown;
+
+  @ApiProperty({ required: false, type: [Object] })
+  loans_offered?: unknown;
+
+  @ApiProperty()
   legal_name?: string;
 
   @ApiProperty()

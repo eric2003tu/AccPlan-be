@@ -7,6 +7,7 @@ import { UpdateBusinessDto } from './dto/update-business.dto';
 import { DeleteBusinessDto } from './dto/delete-business.dto';
 import { BusinessDto } from './dto/business.dto';
 import { OwnedBusinessResponseDto } from './dto/owned-business-response.dto';
+import { UserIdDto } from './dto/user-id.dto';
 
 @ApiTags('Business')
 @ApiBearerAuth('access-token')
@@ -23,6 +24,26 @@ export class BusinessController {
   })
   create(@Body() createBusinessDto: CreateBusinessDto, @Req() req: { user: { id: string } }) {
     return this.businessService.create(createBusinessDto, req.user.id);
+  }
+
+  @Post(':id/apply-owner')
+  @ApiOperation({ summary: 'Apply to be owner of a business', description: 'Authenticated normal users can apply to become the owner of a business' })
+  applyToBeOwner(@Param('id') id: string, @Req() req: { user: { id: string } }) {
+    return this.businessService.applyToBeOwner(id, req.user.id);
+  }
+
+  @Post(':id/approve-owner')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Admin approve user as owner', description: 'System admin approves a user to become owner of the business' })
+  approveOwner(@Param('id') id: string, @Body() body: UserIdDto) {
+    return this.businessService.adminApproveOwner(id, body.userId);
+  }
+
+  @Post(':id/assign-manager')
+  @Roles('OWNER')
+  @ApiOperation({ summary: 'Owner assign manager', description: "Business owner assigns a user as manager; user's system role is updated" })
+  assignManager(@Param('id') id: string, @Body() body: UserIdDto, @Req() req: { user: { id: string } }) {
+    return this.businessService.assignManager(id, req.user.id, body.userId);
   }
 
   @Get()
@@ -54,6 +75,14 @@ export class BusinessController {
   })
   getOwnedBusiness(@Req() req: { user: { id: string } }) {
     return this.businessService.getOwnedBusiness(req.user.id);
+  }
+
+  @Get('owned/dashboard')
+  @Roles('OWNER')
+  @ApiOperation({ summary: "Owner's portfolio dashboard", description: 'Aggregated portfolio metrics for the authenticated owner' })
+  @ApiResponse({ status: 200, description: 'Dashboard data' })
+  getOwnerDashboard(@Req() req: { user: { id: string } }) {
+    return this.businessService.getOwnerDashboard(req.user.id);
   }
 
   @Get('managed/my-business')

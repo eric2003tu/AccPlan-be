@@ -44,6 +44,13 @@ model business_users {
 model businesses {
   id                 String   @id @db.Char(36)
   name               String   @db.VarChar(255)
+  contact_email      String?  @db.VarChar(150)
+  phone              String?  @db.VarChar(50)
+  address            String?  @db.VarChar(500)
+  fiscal_year_start  DateTime? @db.Date
+  starting_money     Decimal? @db.Decimal(12, 2)
+  loans              Json?
+  loans_offered      Json?
   legal_name         String?  @db.VarChar(255)
   trade_name         String?  @db.VarChar(255)
   vat_number         String?  @db.VarChar(100)
@@ -75,6 +82,7 @@ model businesses {
   business_users    business_users[]
   categories        categories[]
   contacts          contacts[]
+  owner_applications owner_applications[]
   fiscal_years      fiscal_years[]
   journal_entries   journal_entries[]
   notifications     notifications[]
@@ -351,6 +359,21 @@ model users {
   business_users  business_users[] @relation("user_business_memberships")
   notifications   notifications[] @relation("user_notifications")
   journal_entries journal_entries[] @relation("journal_entry_creator")
+  owner_applications owner_applications[]
+}
+
+model owner_applications {
+  id          String    @id @db.Char(36)
+  business_id String    @db.Char(36)
+  user_id     String    @db.Char(36)
+  status      owner_application_status @default(PENDING)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  business    businesses @relation(fields: [business_id], references: [id])
+  user        users      @relation(fields: [user_id], references: [id])
+
+  @@index([business_id], map: "idx_owner_applications_business")
+  @@index([user_id], map: "idx_owner_applications_user")
 }
 
 model warehouses {
@@ -457,4 +480,10 @@ enum user_system_role {
   ADMIN
   OWNER
   MANAGER
+}
+
+enum owner_application_status {
+  PENDING
+  APPROVED
+  REJECTED
 }
