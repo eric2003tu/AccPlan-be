@@ -8,6 +8,7 @@ import { DeleteBusinessDto } from './dto/delete-business.dto';
 import { BusinessDto } from './dto/business.dto';
 import { AdminDashboardDto } from './dto/admin-dashboard.dto';
 import { OwnedBusinessResponseDto } from './dto/owned-business-response.dto';
+import { OwnerApplicationsResponseDto } from './dto/owner-applications-response.dto';
 import { UserIdDto } from './dto/user-id.dto';
 
 @ApiTags('Business')
@@ -99,6 +100,35 @@ export class BusinessController {
   @ApiResponse({ status: 200, description: 'Admin dashboard data', type: AdminDashboardDto })
   getAdminDashboard() {
     return this.businessService.getAdminDashboard();
+  }
+
+  @Get('admin/owner-applications')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'List all owner applications', description: 'System admin can view every application to become a business owner' })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'take', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Owner applications list', type: OwnerApplicationsResponseDto })
+  getOwnerApplications(@Query('skip') skip?: string, @Query('take') take?: string) {
+    const parsedSkip = Number.isFinite(Number(skip)) ? Number(skip) : 0;
+    const parsedTake = Number.isFinite(Number(take)) && Number(take) > 0 ? Number(take) : undefined;
+
+    return this.businessService.getOwnerApplications(parsedSkip, parsedTake);
+  }
+
+  @Get('admin/businesses/:id')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Get business details for admin', description: 'System admin can view business details by business ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Business found',
+    type: BusinessDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Business not found',
+  })
+  getBusinessDetailsForAdmin(@Param('id') id: string) {
+    return this.businessService.findOne(id);
   }
 
   @Get('managed/my-business')

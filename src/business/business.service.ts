@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { OwnedBusinessResponseDto } from './dto/owned-business-response.dto';
+import { OwnerApplicationsResponseDto } from './dto/owner-applications-response.dto';
 import { v4 as uuid } from 'uuid';
 
 @Injectable()
@@ -84,6 +85,29 @@ export class BusinessService {
 
       return { success: true };
     });
+  }
+
+  async getOwnerApplications(skip = 0, take?: number) {
+    const applications = await this.prisma.owner_applications.findMany({
+      include: {
+        business: true,
+        user: true,
+      },
+      orderBy: { created_at: 'desc' },
+      skip,
+      ...(typeof take === 'number' ? { take } : {}),
+    });
+
+    const data = applications.map((application) => ({
+      ...application,
+      created_at: application.created_at ?? undefined,
+    }));
+
+    return {
+      count: applications.length,
+      status: 'ok',
+      data,
+    } satisfies OwnerApplicationsResponseDto;
   }
 
   async assignManager(businessId: string, ownerUserId: string, targetUserId: string) {
