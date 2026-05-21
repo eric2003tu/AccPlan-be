@@ -60,36 +60,67 @@ export class BusinessService {
     });
   }
 
-  async adminApproveOwner(businessId: string, targetUserId: string) {
-    // Only called by admin controller method which enforces admin role
-    const business = await this.prisma.businesses.findUnique({ where: { id: businessId } });
-    if (!business) throw new NotFoundException('Business not found');
-
+  async adminApproveOwnerApplication(applicationId: string) {
     return this.prisma.$transaction(async (prisma) => {
-      // create or update business_users to OWNER
-      await prisma.business_users.upsert({
-        where: { business_id_user_id: { business_id: businessId, user_id: targetUserId } },
-        update: { role: 'OWNER' },
-        create: { id: uuid(), business_id: businessId, user_id: targetUserId, role: 'OWNER' },
-      } as any);
+      const application = await prisma.owner_applications.findUnique({
+        where: { id: applicationId },
+      });
 
-      // update system role on users
-      await prisma.users.update({ where: { id: targetUserId }, data: { system_role: 'OWNER' } as any });
+      if (!application) {
+        throw new NotFoundException('Owner application not found');
+      }
 
-      // mark any application as approved if exists
-      await prisma.owner_applications.updateMany({ where: { business_id: businessId, user_id: targetUserId }, data: { status: 'APPROVED' } });
+      if (application.status !== 'PENDING') {
+        throw new BadRequestException(`Owner application is already ${application.status.toLowerCase()}`);
+      }
+
+      if (application.business_id) {
+        await prisma.business_users.upsert({
+          where: {
+            business_id_user_id: {
+              business_id: application.business_id,
+              user_id: application.user_id,
+            },
+          },
+          update: { role: 'OWNER' },
+          create: {
+            id: uuid(),
+            business_id: application.business_id,
+            user_id: application.user_id,
+            role: 'OWNER',
+          },
+        } as any);
+      }
+
+      await prisma.users.update({ where: { id: application.user_id }, data: { system_role: 'OWNER' } as any });
+
+      await prisma.owner_applications.update({
+        where: { id: applicationId },
+        data: { status: 'APPROVED' },
+      });
 
       return { success: true };
     });
   }
 
-  async adminApprovePlatformOwner(targetUserId: string) {
+  async adminRejectOwnerApplication(applicationId: string) {
     return this.prisma.$transaction(async (prisma) => {
-      // update system role on users
-      await prisma.users.update({ where: { id: targetUserId }, data: { system_role: 'OWNER' } as any });
+      const application = await prisma.owner_applications.findUnique({
+        where: { id: applicationId },
+      });
 
-      // mark any platform-level application as approved if exists
-      await prisma.owner_applications.updateMany({ where: { business_id: null, user_id: targetUserId }, data: { status: 'APPROVED' } });
+      if (!application) {
+        throw new NotFoundException('Owner application not found');
+      }
+
+      if (application.status !== 'PENDING') {
+        throw new BadRequestException(`Owner application is already ${application.status.toLowerCase()}`);
+      }
+
+      await prisma.owner_applications.update({
+        where: { id: applicationId },
+        data: { status: 'REJECTED' },
+      });
 
       return { success: true };
     });

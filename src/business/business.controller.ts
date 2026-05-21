@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Put, Param, Delete, Query, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '../auth/roles.decorator';
 import { BusinessService } from './business.service';
@@ -34,18 +34,18 @@ export class BusinessController {
     return this.businessService.applyToBeOwner(req.user.id);
   }
 
-  @Post(':id/approve-owner')
+  @Patch('admin/owner-applications/:id/approve')
   @Roles('ADMIN')
-  @ApiOperation({ summary: 'Admin approve user as owner', description: 'System admin approves a user to become owner of the business' })
-  approveOwner(@Param('id') id: string, @Body() body: UserIdDto) {
-    return this.businessService.adminApproveOwner(id, body.userId);
+  @ApiOperation({ summary: 'Approve an owner application', description: 'System admin approves an owner application using the application id only' })
+  approveOwnerApplication(@Param('id') id: string) {
+    return this.businessService.adminApproveOwnerApplication(id);
   }
 
-  @Post('approve-owner')
+  @Patch('admin/owner-applications/:id/reject')
   @Roles('ADMIN')
-  @ApiOperation({ summary: 'Admin approve user as platform owner', description: 'System admin approves a user to become a platform owner (no business association)' })
-  approvePlatformOwner(@Body() body: UserIdDto) {
-    return this.businessService.adminApprovePlatformOwner(body.userId);
+  @ApiOperation({ summary: 'Reject an owner application', description: 'System admin rejects an owner application using the application id only' })
+  rejectOwnerApplication(@Param('id') id: string) {
+    return this.businessService.adminRejectOwnerApplication(id);
   }
 
   @Post(':id/assign-manager')
