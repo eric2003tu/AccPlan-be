@@ -64,6 +64,23 @@ export class BusinessService {
     });
   }
 
+  async applyToBePlatformOwner(userId: string) {
+    // Check existing platform-level application (no business)
+    const existing = await this.prisma.owner_applications.findFirst({ where: { business_id: null, user_id: userId } });
+    if (existing && existing.status === 'PENDING') {
+      throw new BadRequestException('Application already pending');
+    }
+
+    return this.prisma.owner_applications.create({
+      data: {
+        id: uuid(),
+        business_id: null,
+        user_id: userId,
+        status: 'PENDING',
+      },
+    });
+  }
+
   async adminApproveOwner(businessId: string, targetUserId: string) {
     // Only called by admin controller method which enforces admin role
     const business = await this.prisma.businesses.findUnique({ where: { id: businessId } });
@@ -87,6 +104,18 @@ export class BusinessService {
     });
   }
 
+  async adminApprovePlatformOwner(targetUserId: string) {
+    return this.prisma.$transaction(async (prisma) => {
+      // update system role on users
+      await prisma.users.update({ where: { id: targetUserId }, data: { system_role: 'OWNER' } as any });
+
+      // mark any platform-level application as approved if exists
+      await prisma.owner_applications.updateMany({ where: { business_id: null, user_id: targetUserId }, data: { status: 'APPROVED' } });
+
+      return { success: true };
+    });
+  }
+
   async getOwnerApplications(skip = 0, take?: number) {
     const applications = await this.prisma.owner_applications.findMany({
       include: {
@@ -99,8 +128,13 @@ export class BusinessService {
     });
 
     const data = applications.map((application) => ({
-      ...application,
+      id: application.id,
+      business_id: application.business_id ?? undefined,
+      user_id: application.user_id,
+      status: application.status,
       created_at: application.created_at ?? undefined,
+      business: application.business ?? undefined,
+      user: application.user ?? undefined,
     }));
 
     return {

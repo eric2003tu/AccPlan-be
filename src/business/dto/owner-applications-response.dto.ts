@@ -7,7 +7,8 @@ export class OwnerApplicationDto {
   id: string;
 
   @ApiProperty()
-  business_id: string;
+  @ApiProperty({ required: false })
+  business_id?: string;
 
   @ApiProperty()
   user_id: string;
@@ -19,7 +20,8 @@ export class OwnerApplicationDto {
   created_at?: Date;
 
   @ApiProperty({ type: BusinessDto })
-  business: Record<string, unknown>;
+  @ApiProperty({ type: BusinessDto, required: false })
+  business?: Record<string, unknown>;
 
   @ApiProperty({ type: UserDto })
   user: Record<string, unknown>;

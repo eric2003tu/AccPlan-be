@@ -364,12 +364,12 @@ model users {
 
 model owner_applications {
   id          String    @id @db.Char(36)
-  business_id String    @db.Char(36)
+  business_id String?   @db.Char(36)
   user_id     String    @db.Char(36)
   status      owner_application_status @default(PENDING)
   created_at  DateTime? @default(now()) @db.Timestamp(0)
 
-  business    businesses @relation(fields: [business_id], references: [id])
+  business    businesses? @relation(fields: [business_id], references: [id])
   user        users      @relation(fields: [user_id], references: [id])
 
   @@index([business_id], map: "idx_owner_applications_business")

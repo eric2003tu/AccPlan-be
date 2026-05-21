@@ -34,11 +34,24 @@ export class BusinessController {
     return this.businessService.applyToBeOwner(id, req.user.id);
   }
 
+  @Post('apply-owner')
+  @ApiOperation({ summary: 'Apply to be platform owner', description: 'Authenticated users can apply to become a platform owner (no business id required)' })
+  applyToBePlatformOwner(@Req() req: { user: { id: string } }) {
+    return this.businessService.applyToBePlatformOwner(req.user.id);
+  }
+
   @Post(':id/approve-owner')
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Admin approve user as owner', description: 'System admin approves a user to become owner of the business' })
   approveOwner(@Param('id') id: string, @Body() body: UserIdDto) {
     return this.businessService.adminApproveOwner(id, body.userId);
+  }
+
+  @Post('approve-owner')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: 'Admin approve user as platform owner', description: 'System admin approves a user to become a platform owner (no business association)' })
+  approvePlatformOwner(@Body() body: UserIdDto) {
+    return this.businessService.adminApprovePlatformOwner(body.userId);
   }
 
   @Post(':id/assign-manager')
