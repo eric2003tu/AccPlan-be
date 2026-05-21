@@ -43,29 +43,8 @@ export class BusinessService {
     };
   }
 
-  async applyToBeOwner(businessId: string, userId: string) {
-    // Ensure business exists
-    const business = await this.prisma.businesses.findUnique({ where: { id: businessId } });
-    if (!business) throw new NotFoundException('Business not found');
-
-    // Check existing application
-    const existing = await this.prisma.owner_applications.findFirst({ where: { business_id: businessId, user_id: userId } });
-    if (existing && existing.status === 'PENDING') {
-      throw new BadRequestException('Application already pending');
-    }
-
-    return this.prisma.owner_applications.create({
-      data: {
-        id: uuid(),
-        business_id: businessId,
-        user_id: userId,
-        status: 'PENDING',
-      },
-    });
-  }
-
-  async applyToBePlatformOwner(userId: string) {
-    // Check existing platform-level application (no business)
+  async applyToBeOwner(userId: string) {
+    // Check existing platform-level application (token-only owner application)
     const existing = await this.prisma.owner_applications.findFirst({ where: { business_id: null, user_id: userId } });
     if (existing && existing.status === 'PENDING') {
       throw new BadRequestException('Application already pending');
@@ -129,12 +108,21 @@ export class BusinessService {
 
     const data = applications.map((application) => ({
       id: application.id,
-      business_id: application.business_id ?? undefined,
-      user_id: application.user_id,
       status: application.status,
       created_at: application.created_at ?? undefined,
-      business: application.business ?? undefined,
-      user: application.user ?? undefined,
+      business: application.business
+        ? {
+            name: application.business.name,
+            contact_email: application.business.contact_email ?? undefined,
+          }
+        : undefined,
+      user: application.user
+        ? {
+            first_name: application.user.first_name,
+            last_name: application.user.last_name,
+            email: application.user.email,
+          }
+        : undefined,
     }));
 
     return {

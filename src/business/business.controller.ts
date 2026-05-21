@@ -28,16 +28,10 @@ export class BusinessController {
     return this.businessService.create(createBusinessDto, req.user.id);
   }
 
-  @Post(':id/apply-owner')
-  @ApiOperation({ summary: 'Apply to be owner of a business', description: 'Authenticated normal users can apply to become the owner of a business' })
-  applyToBeOwner(@Param('id') id: string, @Req() req: { user: { id: string } }) {
-    return this.businessService.applyToBeOwner(id, req.user.id);
-  }
-
   @Post('apply-owner')
-  @ApiOperation({ summary: 'Apply to be platform owner', description: 'Authenticated users can apply to become a platform owner (no business id required)' })
-  applyToBePlatformOwner(@Req() req: { user: { id: string } }) {
-    return this.businessService.applyToBePlatformOwner(req.user.id);
+  @ApiOperation({ summary: 'Apply to be owner', description: 'Authenticated users can apply to become an owner using the access token only' })
+  applyToBeOwner(@Req() req: { user: { id: string } }) {
+    return this.businessService.applyToBeOwner(req.user.id);
   }
 
   @Post(':id/approve-owner')

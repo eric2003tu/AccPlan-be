@@ -96,6 +96,7 @@ This opens the interactive Swagger UI where you can:
 
 ### Business
 - `POST /business` - Create business
+- `POST /business/apply-owner` - Apply to become an owner using the access token only; no businessId or userId in the request body
 - `GET /business` - List all businesses
 - `GET /business/:id` - Get business by ID
 - `PUT /business/:id` - Update business

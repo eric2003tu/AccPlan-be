@@ -1,17 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BusinessDto } from './business.dto';
-import { UserDto } from '../../users/dto/user.dto';
 
 export class OwnerApplicationDto {
   @ApiProperty()
   id: string;
-
-  @ApiProperty()
-  @ApiProperty({ required: false })
-  business_id?: string;
-
-  @ApiProperty()
-  user_id: string;
 
   @ApiProperty()
   status: string;
@@ -19,12 +10,26 @@ export class OwnerApplicationDto {
   @ApiProperty({ required: false })
   created_at?: Date;
 
-  @ApiProperty({ type: BusinessDto })
-  @ApiProperty({ type: BusinessDto, required: false })
-  business?: Record<string, unknown>;
+  @ApiProperty({
+    required: false,
+    type: Object,
+    description: 'Business summary without internal identifiers',
+  })
+  business?: {
+    name?: string;
+    contact_email?: string;
+  };
 
-  @ApiProperty({ type: UserDto })
-  user: Record<string, unknown>;
+  @ApiProperty({
+    required: false,
+    type: Object,
+    description: 'Applicant summary without internal identifiers',
+  })
+  user?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+  };
 }
 
 export class OwnerApplicationsResponseDto {
